@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('nip')->nullable()->unique();
+            $table->string('photo')->nullable();
+            $table->enum('role', ['kepala_lab', 'staf', 'admin'])->default('staf');
             $table->rememberToken();
             $table->timestamps();
         });

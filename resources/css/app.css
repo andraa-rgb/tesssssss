@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* HAPUS semua @apply bg-base-200, @apply bg-base-100, dll di sini */
+
+@layer base {
+    body {
+        /* gunakan warna Tailwind default kalau mau apply */
+        @apply font-sans antialiased;
+        /* kalau mau background, pakai warna default misalnya */
+        /* @apply bg-slate-100; */
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+}
