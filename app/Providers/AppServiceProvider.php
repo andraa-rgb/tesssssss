@@ -17,14 +17,11 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+     public function boot(): void
     {
-        // Force HTTPS di production (Vercel)
+        // Force semua URL pakai HTTPS saat production (Vercel)
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
-            
-            // Trust Vercel proxy headers
-            $this->app['request']->server->set('HTTPS', 'on');
         }
     }
 }
