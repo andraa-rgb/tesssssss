@@ -10,13 +10,20 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'nip',
-        'photo',
-        'role',
-    ];
+    'name',
+    'email',
+    'password',
+    'role',
+    'nip',
+    'photo',
+    'expertise',
+    'bio',
+    'scholar_url',
+    'sinta_url',
+    'website_url',
+];
+
+
 
     protected $hidden = [
         'password',

@@ -1,0 +1,41 @@
+{
+    "version": 2,
+    "framework": null,
+    "functions": {
+        "api/index.php": { "runtime": "vercel-php@0.7.4" }
+    },
+    "routes": [
+    {
+        "src": "/favicon.ico",
+        "dest": "/public/favicon.ico"
+    },
+    {
+        "src": "/(css|js|vendor|assets|build)/(.*)",
+        "dest": "/public/$1/$2"
+    }, {
+        "src": "/(.*)",
+        "dest": "/api/index.php"
+    }],
+    "env": {
+        "APP_ENV": "production",
+        "APP_DEBUG": "true",
+        "ASSET_URL": "https://tesssssss-beige.vercel.app/",
+        "APP_KEY":"base64:osFhv1gXFa7K4hyeWH9rHi/1CC5fP2E+zIU14upnNFI=",
+        "DB_CONNECTION":"mysql",
+        "DB_HOST":"gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+        "DB_PORT":"4000",
+        "DB_DATABASE":"test",
+        "DB_USERNAME":"XdniTm3hHaLzNFe.root",
+        "DB_PASSWORD":"HEapaKf0PW2OfOFe",
+        "APP_CONFIG_CACHE": "/tmp/config.php",
+        "APP_EVENTS_CACHE": "/tmp/events.php",
+        "APP_PACKAGES_CACHE": "/tmp/packages.php",
+        "APP_ROUTES_CACHE": "/tmp/routes.php",
+        "APP_SERVICES_CACHE": "/tmp/services.php",
+        "VIEW_COMPILED_PATH": "/tmp",
+
+        "CACHE_DRIVER": "array",
+        "LOG_CHANNEL": "stderr",
+        "SESSION_DRIVER": "cookie"
+    }
+}
