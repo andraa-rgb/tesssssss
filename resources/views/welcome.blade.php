@@ -664,7 +664,8 @@
                        readonly 
                        class="input input-bordered input-sm join-item flex-1 text-xs" 
                        value="">
-                <button onclick="copyUrlToClipboard()" 
+                <button type="button"
+                        onclick="copyUrlToClipboard()" 
                         class="btn btn-sm btn-primary join-item">
                     <svg id="copy-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -681,7 +682,8 @@
         
         {{-- Action Buttons --}}
         <div class="flex gap-2">
-            <button onclick="downloadQrCode()" 
+            <button type="button"
+                    onclick="downloadQrCode()" 
                     class="btn btn-primary btn-sm flex-1 gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -689,11 +691,12 @@
                 </svg>
                 Download
             </button>
-            <button onclick="shareQrCode()" 
+            <button type="button"
+                    onclick="shareQrCode()" 
                     class="btn btn-secondary btn-sm flex-1 gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367-2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
                 Share
             </button>
@@ -736,42 +739,36 @@
         document.getElementById('qr-modal-title').innerHTML = `
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
             </svg>
             ${dosenName}
         `;
-        document.getElementById('qr-modal-subtitle').textContent = `Scan untuk booking konsultasi dengan ${dosenName}`;
+        document.getElementById('qr-modal-subtitle').textContent =
+            `Scan untuk booking konsultasi dengan ${dosenName}`;
         document.getElementById('qr-url-display').value = currentQrUrl;
-        document.getElementById('qr-modal-content').innerHTML = '<div class="loading loading-spinner loading-lg text-primary"></div>';
         document.getElementById('copy-feedback').classList.add('hidden');
-        
+
+        // Ambil SVG dari container tersembunyi
+        const svgContainer = document.getElementById('qr-svg-' + dosenId);
+        if (!svgContainer) {
+            document.getElementById('qr-modal-content').innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-16 h-16 mx-auto text-error mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="text-error font-semibold">QR Code tidak tersedia</p>
+                </div>
+            `;
+        } else {
+            document.getElementById('qr-modal-content').innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-lg inline-block" id="qr-modal-display">
+                    ${svgContainer.innerHTML}
+                </div>
+            `;
+        }
+
         document.getElementById('qr-modal').showModal();
-        
-        // Fetch QR Code
-        fetch(`/api/qrcode/${dosenId}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load QR');
-                return res.text();
-            })
-            .then(svg => {
-                document.getElementById('qr-modal-content').innerHTML = `
-                    <div class="bg-white p-6 rounded-xl shadow-lg inline-block">
-                        ${svg}
-                    </div>
-                `;
-            })
-            .catch(err => {
-                document.getElementById('qr-modal-content').innerHTML = `
-                    <div class="text-center py-8">
-                        <svg class="w-16 h-16 mx-auto text-error mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p class="text-error font-semibold">Gagal memuat QR Code</p>
-                    </div>
-                `;
-                console.error('QR error:', err);
-            });
     }
 
     // Copy URL
@@ -793,35 +790,44 @@
         });
     }
 
-    // Download QR
+    // Download QR (ambil SVG dari modal, convert ke PNG)
     function downloadQrCode() {
-        fetch(`/api/qrcode/${currentDosenId}`)
-            .then(res => res.text())
-            .then(svg => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                
-                const svgBlob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
-                const url = URL.createObjectURL(svgBlob);
-                
-                img.onload = () => {
-                    canvas.width = 500;
-                    canvas.height = 500;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, 500, 500);
-                    ctx.drawImage(img, 0, 0, 500, 500);
-                    
-                    canvas.toBlob(blob => {
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = `qrcode-${currentDosenName.replace(/\s+/g, '-')}.png`;
-                        link.click();
-                    });
-                };
-                
-                img.src = url;
+        const display = document.getElementById('qr-modal-display');
+        if (!display) {
+            alert('QR Code belum tersedia');
+            return;
+        }
+
+        const svg = display.innerHTML;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        const svgBlob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+            const size = 500;
+            canvas.width = size;
+            canvas.height = size;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, 0, 0, size, size);
+
+            canvas.toBlob(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `qrcode-${currentDosenName.replace(/\s+/g, '-')}.png`;
+                link.click();
             });
+        };
+
+        img.onerror = () => {
+            console.error('Failed to load QR for download');
+            alert('Gagal memuat QR untuk diunduh. Silakan coba lagi.');
+        };
+
+        img.src = url;
     }
 
     // Share QR
@@ -838,7 +844,7 @@
         }
     }
 
-    // Search & Filter
+    // Search & Filter (tetap seperti semula)
     const searchInput = document.getElementById('search-dosen');
     const sortSelect = document.getElementById('sort-dosen');
     const grid = document.getElementById('dosen-grid');
@@ -904,6 +910,7 @@
         });
     });
 </script>
+
 
 </body>
 </html>
