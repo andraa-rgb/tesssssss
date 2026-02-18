@@ -311,185 +311,111 @@
 </section>
 
 {{-- DOSEN SECTION --}}
-<section id="dosen" class="py-20 bg-base-100">
-    <div class="max-w-7xl mx-auto px-4">
-        {{-- Section Header --}}
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-black mb-4">
-                <span class="text-gradient">Daftar Dosen</span>
-            </h2>
-            <p class="text-base-content/70 max-w-2xl mx-auto">
-                Pilih dosen untuk melihat jadwal lengkap dan melakukan booking konsultasi
-            </p>
-        </div>
+<section id="dosen" class="max-w-6xl mx-auto px-4 py-16">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">Daftar Dosen</h2>
 
-        {{-- Search & Filter --}}
-        <div class="mb-8 flex flex-col md:flex-row gap-4">
-            <div class="flex-1">
-                <div class="form-control">
-                    <div class="input-group">
-                        <span class="bg-base-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <div class="flex gap-2 items-center">
+            <input id="search-dosen"
+                   type="text"
+                   placeholder="Cari dosen..."
+                   class="input input-sm input-bordered" />
+
+            <select id="sort-dosen" class="select select-sm select-bordered">
+                <option value="">Urutkan</option>
+                <option value="name">Nama A-Z</option>
+                <option value="name-desc">Nama Z-A</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="no-results" class="hidden text-center text-sm text-base-content/60 py-8">
+        Tidak ada dosen yang cocok dengan pencarian.
+    </div>
+
+    {{-- GRID DOSEN --}}
+    <div id="dosen-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach($dosens as $dosen)
+            <div class="card bg-base-100 shadow-lg border border-base-300"
+                 data-dosen-id="{{ $dosen->id }}"
+                 data-dosen-name="{{ strtolower($dosen->name) }}">
+                <div class="card-body">
+
+                    {{-- Avatar --}}
+                    <div class="avatar mb-4">
+                        @if($dosen->photo)
+                            <div class="w-20 rounded-full ring-4 ring-primary ring-offset-base-100 ring-offset-2">
+                                <img src="{{ asset('storage/' . $dosen->photo) }}" alt="{{ $dosen->name }}">
+                            </div>
+                        @else
+                            <div class="bg-gradient-to-br from-primary to-secondary text-primary-content rounded-full w-20 h-20 ring-4 ring-primary ring-offset-base-100 ring-offset-2 flex items-center justify-center">
+                                <span class="text-3xl font-bold">{{ substr($dosen->name, 0, 1) }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Info Dosen --}}
+                    <h3 class="card-title text-lg mb-1">{{ $dosen->name }}</h3>
+                    <div class="badge badge-outline capitalize mb-2">
+                        {{ str_replace('_', ' ', $dosen->role) }}
+                    </div>
+
+                    @if($dosen->expertise)
+                        <p class="text-sm text-base-content/70 mb-3">
+                            {{ \Illuminate\Support\Str::limit($dosen->expertise, 60) }}
+                        </p>
+                    @endif
+
+                    {{-- Status --}}
+                    @if($dosen->status)
+                        @php
+                            $statusColors = [
+                                'Ada'        => 'badge-success',
+                                'Mengajar'   => 'badge-warning',
+                                'Konsultasi' => 'badge-info',
+                                'Tidak Ada'  => 'badge-ghost',
+                            ];
+                            $statusColor = $statusColors[$dosen->status->status] ?? 'badge-ghost';
+                        @endphp
+                        <div class="badge {{ $statusColor }} gap-2 mb-3">
+                            <span class="w-2 h-2 rounded-full bg-current animate-pulse"></span>
+                            {{ $dosen->status->status }}
+                        </div>
+                    @endif
+
+                    {{-- QR SVG Container (TERSEMBUNYI, untuk modal & download) --}}
+                    <div id="qr-svg-{{ $dosen->id }}" class="hidden">
+                        {!! $dosen->qr_svg !!}
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="card-actions justify-between items-center mt-2">
+                        <button type="button"
+                                onclick="showQrModal({{ $dosen->id }}, '{{ $dosen->name }}')"
+                                class="btn btn-sm btn-outline gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
-                        </span>
-                        <input type="text" 
-                               id="search-dosen"
-                               placeholder="Cari nama dosen..." 
-                               class="input input-bordered w-full" />
+                            QR Code
+                        </button>
+
+                        <a href="{{ route('dosen.show', $dosen) }}"
+                           class="btn btn-sm btn-primary gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Detail
+                        </a>
                     </div>
+
                 </div>
             </div>
-            <div class="form-control w-full md:w-64">
-                <select id="sort-dosen" class="select select-bordered">
-                    <option value="name">Urutkan: A-Z</option>
-                    <option value="name-desc">Urutkan: Z-A</option>
-                    <option value="status">Status: Tersedia</option>
-                </select>
-            </div>
-        </div>
-
-        {{-- Dosen Grid --}}
-        <div id="dosen-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($dosens as $dosen)
-                <div class="card bg-base-100 shadow-lg hover:shadow-2xl border border-base-300 card-hover-lift overflow-hidden transition-all duration-300"
-                     data-dosen-name="{{ strtolower($dosen->name) }}"
-                     data-dosen-id="{{ $dosen->id }}">
-                    
-                    {{-- Card Header with Gradient --}}
-                    <div class="relative h-32 bg-gradient-to-br from-primary/20 to-secondary/20 overflow-hidden">
-                        <div class="absolute inset-0 opacity-10">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
-                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
-                        </div>
-                        
-                        {{-- Avatar --}}
-                        <div class="absolute -bottom-12 left-1/2 -translate-x-1/2">
-                            <div class="avatar">
-                                @if($dosen->photo)
-                                    <div class="w-24 rounded-full ring-4 ring-base-100 shadow-xl">
-                                        <img src="{{ asset('storage/' . $dosen->photo) }}" alt="{{ $dosen->name }}">
-                                    </div>
-                                @else
-                                    <div class="w-24 h-24 rounded-full ring-4 ring-base-100 shadow-xl bg-gradient-primary flex items-center justify-center text-primary-content">
-                                        <span class="text-3xl font-bold">{{ substr($dosen->name, 0, 1) }}</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Card Body --}}
-                    <div class="card-body pt-16 items-center text-center">
-                        {{-- Name & Role --}}
-                        <h3 class="card-title text-lg mb-1">{{ $dosen->name }}</h3>
-                        <div class="badge badge-primary badge-sm capitalize mb-2">
-                            {{ str_replace('_', ' ', $dosen->role) }}
-                        </div>
-                        <p class="text-xs text-base-content/60 mb-4">{{ $dosen->nip ?? 'NIP belum diisi' }}</p>
-
-                        {{-- Status Badge --}}
-                        @if($dosen->status)
-                            @php
-                                $statusConfig = match($dosen->status->status) {
-                                    'Ada' => ['badge' => 'badge-success', 'text' => 'Tersedia', 'icon' => '✓'],
-                                    'Mengajar' => ['badge' => 'badge-warning', 'text' => 'Mengajar', 'icon' => '📚'],
-                                    'Konsultasi' => ['badge' => 'badge-info', 'text' => 'Konsultasi', 'icon' => '💬'],
-                                    'Tidak Ada' => ['badge' => 'badge-ghost', 'text' => 'Tidak Ada', 'icon' => '✕'],
-                                    default => ['badge' => 'badge-ghost', 'text' => $dosen->status->status, 'icon' => '•'],
-                                };
-                            @endphp
-                            <div class="badge {{ $statusConfig['badge'] }} badge-lg gap-2 mb-4">
-                                <span class="status-dot w-2 h-2 rounded-full bg-current"></span>
-                                {{ $statusConfig['icon'] }} {{ $statusConfig['text'] }}
-                            </div>
-                        @endif
-
-                        {{-- Expertise --}}
-                        @if($dosen->expertise)
-                            <div class="w-full text-left mb-3">
-                                <div class="text-xs font-semibold text-base-content/60 mb-1">Keahlian:</div>
-                                <p class="text-sm line-clamp-2">{{ $dosen->expertise }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Bio --}}
-                        @if($dosen->bio)
-                            <div class="w-full text-left mb-3">
-                                <div class="text-xs font-semibold text-base-content/60 mb-1">Tentang:</div>
-                                <p class="text-sm text-base-content/70 line-clamp-3">{{ $dosen->bio }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Links --}}
-                        @if($dosen->scholar_url || $dosen->sinta_url || $dosen->website_url)
-                            <div class="divider my-2"></div>
-                            <div class="flex flex-wrap gap-2 justify-center">
-                                @if($dosen->scholar_url)
-                                    <a href="{{ $dosen->scholar_url }}" target="_blank" 
-                                       class="btn btn-xs btn-ghost gap-1 hover:btn-primary" 
-                                       title="Google Scholar">
-                                        🎓 Scholar
-                                    </a>
-                                @endif
-                                @if($dosen->sinta_url)
-                                    <a href="{{ $dosen->sinta_url }}" target="_blank" 
-                                       class="btn btn-xs btn-ghost gap-1 hover:btn-secondary" 
-                                       title="SINTA">
-                                        📄 SINTA
-                                    </a>
-                                @endif
-                                @if($dosen->website_url)
-                                    <a href="{{ $dosen->website_url }}" target="_blank" 
-                                       class="btn btn-xs btn-ghost gap-1 hover:btn-accent" 
-                                       title="Website">
-                                        🌐 Website
-                                    </a>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- Actions --}}
-                        <div class="card-actions justify-between w-full mt-4 pt-4 border-t border-base-300">
-                            <a href="{{ route('dosen.show', $dosen->id) }}" 
-                               class="btn btn-primary btn-sm flex-1 gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                Detail
-                            </a>
-                            
-                            <button onclick="showQrModal({{ $dosen->id }}, '{{ addslashes($dosen->name) }}')"
-                                    class="btn btn-square btn-outline btn-sm"
-                                    title="QR Code">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        {{-- Empty State --}}
-        <div id="no-results" class="hidden text-center py-16">
-            <div class="text-6xl mb-4 animate-float">🔍</div>
-            <h3 class="text-xl font-bold mb-2">Tidak ada hasil</h3>
-            <p class="text-base-content/70">Coba kata kunci pencarian lain</p>
-        </div>
-
-        @if($dosens->isEmpty())
-            <div class="text-center py-16">
-                <div class="text-6xl mb-4 animate-float">📭</div>
-                <h3 class="text-xl font-bold mb-2">Belum ada data dosen</h3>
-                <p class="text-base-content/70">Data dosen akan ditampilkan di sini</p>
-            </div>
-        @endif
+        @endforeach
     </div>
 </section>
+
 
 {{-- FEATURES SECTION --}}
 <section id="features" class="py-20 bg-base-200">
