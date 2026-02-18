@@ -1,7 +1,7 @@
-module.exports = {
+export default {
   plugins: {
-    'postcss-nesting': {},   // <--- plugin nesting dulu
+    'postcss-nesting': {},   // plugin nesting dulu
     tailwindcss: {},
     autoprefixer: {},
   },
-};
+}
