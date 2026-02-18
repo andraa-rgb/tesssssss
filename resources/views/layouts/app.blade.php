@@ -27,31 +27,32 @@
                     {{-- MENU DESKTOP --}}
                     <div class="hidden md:flex">
                         <ul class="menu menu-horizontal px-1">
-                            <li>
-                                <a href="{{ route('dashboard') }}"
-                                   class="{{ request()->routeIs('dashboard') ? 'active font-semibold' : '' }}">
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('jadwal.index') }}"
-                                   class="{{ request()->routeIs('jadwal.*') ? 'active font-semibold' : '' }}">
-                                    Jadwal
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('booking.index') }}"
-                                   class="{{ request()->routeIs('booking.*') ? 'active font-semibold' : '' }}">
-                                    Booking
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('profile.edit') }}"
-                                   class="{{ request()->routeIs('profile.*') ? 'active font-semibold' : '' }}">
-                                    Profil
-                                </a>
-                            </li>
-                        </ul>
+    <li>
+        <a href="{{ route('dashboard') }}"
+           class="{{ request()->routeIs('dashboard') ? 'active font-semibold' : '' }}">
+            Dashboard
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('jadwal.index') }}"
+           class="{{ request()->routeIs('jadwal.*') ? 'active font-semibold' : '' }}">
+            Jadwal
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('booking.index') }}"
+           class="{{ request()->routeIs('booking.*') ? 'active font-semibold' : '' }}">
+            Booking
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('profile.edit') }}"
+           class="{{ request()->routeIs('profile.*') ? 'active font-semibold' : '' }}">
+            Profil
+        </a>
+    </li>
+</ul>
+
                     </div>
 
                     {{-- THEME TOGGLE --}}

@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'smtp'),
+    'default' => env('MAIL_MAILER', 'resend'),
 
     /*
     |--------------------------------------------------------------------------
@@ -50,6 +50,10 @@ return [
             'transport' => 'ses',
         ],
 
+        'resend' => [
+                    'transport' => 'resend',
+                ],
+                
         'mailgun' => [
             'transport' => 'mailgun',
             // 'client' => [
@@ -81,7 +85,7 @@ return [
         'failover' => [
             'transport' => 'failover',
             'mailers' => [
-                'smtp',
+                'resend',
                 'log',
             ],
         ],
@@ -99,8 +103,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', '2343037@wicida.ac.id'),
+        'name' => env('MAIL_FROM_NAME', 'LAB Wicida'),
     ],
 
     /*

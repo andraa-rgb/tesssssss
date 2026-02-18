@@ -18,44 +18,76 @@ use App\Models\User;
 |--------------------------------------------------------------------------
 */
 
-// Home/Welcome
+// Home/Welcome - Menampilkan daftar dosen
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Detail Dosen (Publik)
+// Detail Dosen (Publik) - Bisa diakses tanpa login
 Route::get('/dosen/{user}', [DosenPublicController::class, 'show'])->name('dosen.show');
 Route::post('/dosen/{user}/booking', [DosenPublicController::class, 'storeBooking'])->name('dosen.booking.store');
 
-// API publik (AJAX)
-Route::get('/api/jadwal/{user}', [DosenPublicController::class, 'apiJadwal'])->name('api.jadwal');
-Route::get('/api/status/{user}', [DosenPublicController::class, 'apiStatus'])->name('api.status');
+// Download QR Code PNG (dipakai landing page & profil dosen)
+Route::get('/dosen/{user}/qrcode/download', [DosenPublicController::class, 'downloadQr'])
+    ->name('dosen.qrcode.download');
 
-// API QR Code (untuk modal di landing page) - HANYA SATU ROUTE
-Route::get('/api/qrcode/{id}', function($id) {
-    try {
-        $user = User::findOrFail($id);
-        $url = route('dosen.show', $user->id);
-        
-        $qrCode = QrCode::size(250)
-                        ->style('round')
-                        ->eye('circle')
-                        ->margin(2)
-                        ->errorCorrection('H')
-                        ->generate($url);
-        
-        return response($qrCode, 200)
-            ->header('Content-Type', 'image/svg+xml')
-            ->header('Cache-Control', 'public, max-age=3600');
-            
-    } catch (\Exception $e) {
-        \Log::error('QR Code generation failed: ' . $e->getMessage());
-        
-        return response()->json([
-            'error' => 'QR Code tidak dapat dibuat',
-            'message' => $e->getMessage(),
-            'user_id' => $id
-        ], 500);
-    }
-})->name('api.qrcode');
+/*
+|--------------------------------------------------------------------------
+| API Public untuk AJAX (Real-time data)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('api')->name('api.')->group(function () {
+    // Get jadwal dosen
+    Route::get('/jadwal/{user}', [DosenPublicController::class, 'apiJadwal'])->name('jadwal');
+
+    // Get status ketersediaan dosen
+    Route::get('/status/{user}', [DosenPublicController::class, 'apiStatus'])->name('status');
+
+    // Generate QR Code SVG (untuk embed di halaman)
+    Route::get('/qrcode/{id}', function ($id) {
+        try {
+            if (!extension_loaded('gd') && !extension_loaded('imagick')) {
+                return response()->json([
+                    'error' => 'GD atau Imagick extension tidak tersedia di server',
+                ], 500);
+            }
+
+            $user = User::findOrFail($id);
+            $url  = route('dosen.show', $user->id);
+
+            $qrCode = QrCode::format('svg')
+                ->size(250)
+                ->style('round')
+                ->eye('circle')
+                ->margin(2)
+                ->errorCorrection('H')
+                ->generate($url);
+
+            return response($qrCode, 200)
+                ->header('Content-Type', 'image/svg+xml')
+                ->header('Cache-Control', 'public, max-age=86400')
+                ->header('Access-Control-Allow-Origin', '*');
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error'   => 'User tidak ditemukan',
+                'user_id' => $id,
+            ], 404);
+
+        } catch (\Exception $e) {
+            \Log::error('QR Code generation failed', [
+                'user_id' => $id,
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error'   => 'QR Code tidak dapat dibuat',
+                'message' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'user_id' => $id,
+            ], 500);
+        }
+    })->name('qrcode');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -63,7 +95,7 @@ Route::get('/api/qrcode/{id}', function($id) {
 |--------------------------------------------------------------------------
 */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -71,32 +103,44 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Dashboard Dosen
+    // =============================================
+    // DASHBOARD DOSEN
+    // =============================================
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
-    // Profil Dosen
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // Password Update
-    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
-    
-    // QR Code Download
-    Route::get('/profile/qrcode/download', [ProfileController::class, 'downloadQrCode'])
-        ->name('profile.qrcode.download');
+    // =============================================
+    // PROFILE MANAGEMENT
+    // =============================================
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
 
-    // Jadwal Dosen (CRUD)
+        // Password Update
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+
+        // QR Code Download (profil dosen pakai route publik yang sama, tidak perlu method khusus di ProfileController)
+        // Di Blade: route('dosen.qrcode.download', auth()->id())
+    });
+
+    // =============================================
+    // JADWAL MANAGEMENT (CRUD)
+    // =============================================
     Route::resource('jadwal', JadwalController::class)->except(['show']);
 
-    // Booking Dosen
+    // =============================================
+    // BOOKING MANAGEMENT (UNTUK DOSEN YANG LOGIN)
+    // =============================================
     Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
     Route::post('/booking/{booking}/approve', [BookingController::class, 'approve'])->name('booking.approve');
     Route::post('/booking/{booking}/reject', [BookingController::class, 'reject'])->name('booking.reject');
+    Route::delete('/booking/{booking}', [BookingController::class, 'destroy'])->name('booking.destroy');
 
-    // Update Status Real-time
+    // =============================================
+    // STATUS REAL-TIME UPDATE
+    // =============================================
     Route::post('/api/status/update', [StatusController::class, 'update'])->name('api.status.update');
 });
 
@@ -106,14 +150,35 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard Admin
+    // =============================================
+    // ADMIN DASHBOARD
+    // =============================================
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Kelola akun dosen
-    Route::get('/dosen', [AdminDosenController::class, 'index'])->name('dosen.index');
-    Route::get('/dosen/create', [AdminDosenController::class, 'create'])->name('dosen.create');
-    Route::post('/dosen', [AdminDosenController::class, 'store'])->name('dosen.store');
-    Route::delete('/dosen/{user}', [AdminDosenController::class, 'destroy'])->name('dosen.destroy');
+    // =============================================
+    // KELOLA DOSEN
+    // =============================================
+    Route::prefix('dosen')->name('dosen.')->group(function () {
+        Route::get('/', [AdminDosenController::class, 'index'])->name('index');
+        Route::get('/create', [AdminDosenController::class, 'create'])->name('create');
+        Route::post('/', [AdminDosenController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [AdminDosenController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [AdminDosenController::class, 'update'])->name('update');
+        Route::delete('/{user}', [AdminDosenController::class, 'destroy'])->name('destroy');
+    });
+
+    // =============================================
+    // KELOLA BOOKING (Admin view all)
+    // =============================================
+    Route::prefix('bookings')->name('bookings.')->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'allBookings'])->name('index');
+        Route::delete('/{booking}', [AdminDashboardController::class, 'deleteBooking'])->name('destroy');
+    });
+
+    // =============================================
+    // REPORTS & STATISTICS
+    // =============================================
+    Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
 });

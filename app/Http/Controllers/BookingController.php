@@ -4,55 +4,96 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingReceivedMail;
+use App\Mail\BookingApprovedMail;
+use App\Mail\BookingRejectedMail;
 
 class BookingController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Tampilkan list booking untuk dosen yang login
+     * View: resources/views/dosen/booking/index.blade.php
+     */
+    public function index()
     {
-        $status = $request->query('status');
+        $user = auth()->user();
 
-        $query = Booking::where('user_id', auth()->id())
-            ->latest();
+        $bookings = $user->bookings()
+            ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
+            ->orderBy('tanggal_booking', 'desc')
+            ->orderBy('jam_mulai', 'desc')
+            ->paginate(15);
 
-        if ($status && in_array($status, ['pending','approved','rejected'])) {
-            $query->where('status', $status);
-        }
-
-        $bookings = $query->paginate(10);
-
-        return view('dosen.booking.index', compact('bookings','status'));
+        return view('dosen.booking.index', compact('bookings'));
     }
 
+    /**
+     * Approve booking
+     */
     public function approve(Booking $booking)
     {
-        $this->authorizeOwner($booking);
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $booking->update([
             'status' => 'approved',
-            'alasan_reject' => null,
+            'approved_at' => now(),
         ]);
 
-        return back()->with('success','Booking disetujui.');
+        try {
+            Mail::to($booking->email_mahasiswa)->send(new BookingApprovedMail($booking));
+            $msg = 'Booking disetujui dan email notifikasi telah dikirim ke ' . $booking->email_mahasiswa;
+        } catch (\Exception $e) {
+            \Log::error('Email approval gagal: '.$e->getMessage());
+            $msg = 'Booking disetujui, tetapi email notifikasi gagal dikirim.';
+        }
+
+        return back()->with('success', $msg);
     }
 
+    /**
+     * Reject booking
+     */
     public function reject(Request $request, Booking $booking)
     {
-        $this->authorizeOwner($booking);
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        $data = $request->validate([
-            'alasan_reject' => 'required|string',
+        $validated = $request->validate([
+            'alasan_reject' => 'required|string|min:10|max:500',
         ]);
 
         $booking->update([
             'status' => 'rejected',
-            'alasan_reject' => $data['alasan_reject'],
+            'alasan_reject' => $validated['alasan_reject'],
+            'rejected_at' => now(),
         ]);
 
-        return back()->with('success','Booking ditolak.');
+        try {
+            Mail::to($booking->email_mahasiswa)->send(new BookingRejectedMail($booking));
+            $msg = 'Booking ditolak dan email notifikasi telah dikirim ke ' . $booking->email_mahasiswa;
+        } catch (\Exception $e) {
+            \Log::error('Email rejection gagal: '.$e->getMessage());
+            $msg = 'Booking ditolak, tetapi email notifikasi gagal dikirim.';
+        }
+
+        return back()->with('success', $msg);
     }
 
-    protected function authorizeOwner(Booking $booking)
+    /**
+     * Hapus booking
+     */
+    public function destroy(Booking $booking)
     {
-        abort_unless($booking->user_id === auth()->id(), 403);
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $booking->delete();
+
+        return back()->with('success', 'Booking berhasil dihapus.');
     }
 }

@@ -2,104 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Tampilkan form edit profil
      */
-    public function edit(Request $request)
+    public function edit()
     {
-        $user = $request->user();
+        $user = Auth::user();
         
-        // Generate QR code URL
+        // Generate QR Code URL (ke halaman publik dosen)
         $qrCodeUrl = route('dosen.show', $user->id);
         
-        // Generate QR sebagai SVG (inline di Blade)
-        $qrCodeSvg = QrCode::size(200)
-                           ->style('round')
-                           ->eye('circle')
-                           ->generate($qrCodeUrl);
-        
-        return view('profile.edit', compact('user', 'qrCodeSvg', 'qrCodeUrl'));
+        // Generate QR Code SVG
+        $qrCodeSvg = QrCode::format('svg')
+            ->size(250)
+            ->style('round')
+            ->eye('circle')
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($qrCodeUrl);
+
+        return view('profile.edit', compact('qrCodeSvg', 'qrCodeUrl'));
     }
 
     /**
-     * Update the user's profile information.
+     * Update profil dosen
      */
     public function update(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user();
 
-        $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', 'max:255', Rule::unique('users','email')->ignore($user->id)],
-            'nip'         => ['nullable', 'string', 'max:50'],
-            'expertise'   => ['nullable', 'string', 'max:255'],
-            'bio'         => ['nullable', 'string', 'max:1000'],
-            'scholar_url' => ['nullable', 'url', 'max:255'],
-            'sinta_url'   => ['nullable', 'url', 'max:255'],
-            'website_url' => ['nullable', 'url', 'max:255'],
-            'cropped_image' => ['nullable', 'string'],
+        // Handle hapus foto
+        if ($request->has('remove_photo') && $request->remove_photo == '1') {
+            if ($user->photo) {
+                Storage::disk('public')->delete($user->photo);
+                $user->photo = null;
+                $user->save();
+                
+                return redirect()->route('profile.edit')
+                    ->with('status', 'profile-updated')
+                    ->with('success', 'Foto profil berhasil dihapus.');
+            }
+        }
+
+        // Validasi
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email,' . $user->id,
+            'nip'         => 'nullable|string|max:50',
+            'expertise'   => 'nullable|string|max:500',
+            'bio'         => 'nullable|string|max:1000',
+            'scholar_url' => 'nullable|url|max:500',
+            'sinta_url'   => 'nullable|url|max:500',
+            'website_url' => 'nullable|url|max:500',
+            'cropped_image' => 'nullable|string', // base64 image
         ]);
 
-        // 1. Hapus foto jika user klik "Hapus Foto"
-        if ($request->has('remove_photo') && $request->input('remove_photo') == '1') {
-            if ($user->photo && Storage::disk('public')->exists($user->photo)) {
+        // Handle upload foto (dari cropped image)
+        if ($request->filled('cropped_image')) {
+            // Hapus foto lama
+            if ($user->photo) {
                 Storage::disk('public')->delete($user->photo);
             }
-            $data['photo'] = null;
-        }
 
-        // 2. Proses foto baru kalau ada hasil crop
-        if (!empty($data['cropped_image'])) {
-            $base64 = $data['cropped_image'];
+            // Decode base64 dan simpan
+            $imageData = $request->input('cropped_image');
+            
+            // Remove data:image/jpeg;base64, prefix
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
+                $imageData = substr($imageData, strpos($imageData, ',') + 1);
+                $type = strtolower($type[1]); // jpg, png, gif
 
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
-                $base64 = substr($base64, strpos($base64, ',') + 1);
-                $extension = strtolower($type[1]);
+                $imageData = base64_decode($imageData);
 
-                if (!in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                    $extension = 'jpg';
+                if ($imageData === false) {
+                    return back()->withErrors(['photo' => 'Gagal decode gambar.']);
                 }
-
-                $base64 = str_replace(' ', '+', $base64);
-                $imageData = base64_decode($base64);
-
-                if ($imageData !== false) {
-                    if ($user->photo && Storage::disk('public')->exists($user->photo)) {
-                        Storage::disk('public')->delete($user->photo);
-                    }
-
-                    $fileName = 'profile-photos/' . uniqid('profile_') . '.' . $extension;
-                    Storage::disk('public')->put($fileName, $imageData);
-
-                    $data['photo'] = $fileName;
-                }
+            } else {
+                return back()->withErrors(['photo' => 'Format gambar tidak valid.']);
             }
+
+            // Generate filename unik
+            $filename = 'profile_photos/' . uniqid() . '_' . time() . '.jpg';
+            
+            // Simpan ke storage
+            Storage::disk('public')->put($filename, $imageData);
+            
+            $validated['photo'] = $filename;
         }
 
-        unset($data['cropped_image']);
+        // Update user
+        $user->update($validated);
 
-        $user->fill($data);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
-
-        return back()->with('status', 'profile-updated');
+        return redirect()->route('profile.edit')
+            ->with('status', 'profile-updated');
     }
 
     /**
@@ -109,22 +113,47 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'min:8', 'confirmed'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('status', 'password-updated');
+        return redirect()->route('profile.edit')
+            ->with('status', 'password-updated');
     }
 
     /**
-     * Delete the user's account.
+     * Download QR Code sebagai PNG
      */
-    public function destroy(Request $request): RedirectResponse
+    public function downloadQrCode()
     {
-        $request->validateWithBag('userDeletion', [
+        $user = Auth::user();
+        
+        // URL ke halaman publik dosen
+        $url = route('dosen.show', $user->id);
+        
+        // Generate QR sebagai PNG
+        $qrCode = QrCode::format('png')
+            ->size(500)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($url);
+
+        $filename = 'qrcode-' . str_replace(' ', '-', strtolower($user->name)) . '-' . time() . '.png';
+
+        return response($qrCode, 200)
+            ->header('Content-Type', 'image/png')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Hapus akun (optional)
+     */
+    public function destroy(Request $request)
+    {
+        $request->validate([
             'password' => ['required', 'current_password'],
         ]);
 
@@ -137,29 +166,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
-    }
-
-    /**
-     * Download QR Code as PNG
-     */
-    public function downloadQrCode(Request $request)
-    {
-        $user = $request->user();
-        $qrCodeUrl = route('dosen.show', $user->id);
-        
-        // Generate QR sebagai PNG
-        $qrCode = QrCode::format('png')
-                        ->size(400)
-                        ->margin(2)
-                        ->style('round')
-                        ->eye('circle')
-                        ->generate($qrCodeUrl);
-        
-        $fileName = 'qrcode-' . $user->name . '-' . now()->format('Ymd') . '.png';
-        
-        return response($qrCode, 200)
-            ->header('Content-Type', 'image/png')
-            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+        return redirect('/');
     }
 }

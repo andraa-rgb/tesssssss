@@ -2,17 +2,678 @@
 @tailwind components;
 @tailwind utilities;
 
-/* HAPUS semua @apply bg-base-200, @apply bg-base-100, dll di sini */
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
 
 @layer base {
-    body {
-        /* gunakan warna Tailwind default kalau mau apply */
-        @apply font-sans antialiased;
-        /* kalau mau background, pakai warna default misalnya */
-        /* @apply bg-slate-100; */
-    }
-
     html {
         scroll-behavior: smooth;
     }
+
+    body {
+        @apply font-sans antialiased bg-base-200 text-base-content;
+    }
+
+    /* Smooth font rendering */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* ============================================
+   CUSTOM ANIMATIONS
+   ============================================ */
+
+@layer utilities {
+    /* Fade in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .fade-in-up {
+        opacity: 0;
+        animation: fadeInUp 1s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animation delays */
+    .delay-1 { animation-delay: 0.2s; }
+    .delay-2 { animation-delay: 0.4s; }
+    .delay-3 { animation-delay: 0.6s; }
+    .delay-4 { animation-delay: 0.8s; }
+
+    /* Pulse animation */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+}
+
+/* ============================================
+   LANDING PAGE ANIMATIONS
+   ============================================ */
+
+/* Animated gradient background */
+.animated-gradient {
+    background: linear-gradient(-45deg, #570DF8, #F000B8, #37CDBE, #1FB2A6);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Floating particles */
+.particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: float 20s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) translateX(50px) scale(0.5);
+        opacity: 0;
+    }
+}
+
+/* Glowing effect */
+.glow {
+    box-shadow: 0 0 20px rgba(87, 13, 248, 0.5),
+                0 0 40px rgba(87, 13, 248, 0.3),
+                0 0 60px rgba(87, 13, 248, 0.2);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(87, 13, 248, 0.5),
+                    0 0 40px rgba(87, 13, 248, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(87, 13, 248, 0.8),
+                    0 0 60px rgba(87, 13, 248, 0.5);
+    }
+}
+
+/* Starfield background */
+.stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* ============================================
+   BUTTON & INTERACTION EFFECTS
+   ============================================ */
+
+/* Button hover lift effect */
+.btn-hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-hover-lift:active {
+    transform: translateY(-2px);
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Ripple effect for buttons */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+.table {
+    @apply w-full;
+}
+
+.table :where(thead, tfoot) {
+    @apply bg-base-200;
+}
+
+.table :where(thead, tfoot) :where(th) {
+    @apply font-bold text-sm uppercase tracking-wide;
+}
+
+.table-zebra tbody tr:nth-child(even) {
+    @apply bg-base-200/50;
+}
+
+.table :where(tbody tr):hover {
+    @apply bg-base-300/30;
+}
+
+/* ============================================
+   FORM & INPUT ENHANCEMENTS
+   ============================================ */
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-base-100;
+    outline: none;
+}
+
+.input-error,
+.textarea-error {
+    @apply border-error;
+}
+
+.input-error:focus,
+.textarea-error:focus {
+    @apply ring-error;
+}
+
+/* ============================================
+   ALERT ANIMATIONS
+   ============================================ */
+
+.alert {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   BADGE STYLES
+   ============================================ */
+
+.badge-success {
+    @apply bg-success text-success-content;
+}
+
+.badge-warning {
+    @apply bg-warning text-warning-content;
+}
+
+.badge-error {
+    @apply bg-error text-error-content;
+}
+
+.badge-info {
+    @apply bg-info text-info-content;
+}
+
+.badge-primary {
+    @apply bg-primary text-primary-content;
+}
+
+/* ============================================
+   STATS CARD ENHANCEMENTS
+   ============================================ */
+
+.stat {
+    @apply p-4 rounded-lg;
+}
+
+.stat-figure {
+    @apply opacity-20;
+}
+
+.stat-title {
+    @apply text-base-content/70 text-sm font-medium;
+}
+
+.stat-value {
+    @apply text-3xl font-bold my-2;
+}
+
+.stat-desc {
+    @apply text-base-content/60 text-xs;
+}
+
+/* ============================================
+   MODAL ENHANCEMENTS
+   ============================================ */
+
+.modal-box {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-backdrop {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading {
+    @apply inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+.skeleton {
+    @apply bg-base-300 rounded animate-pulse;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+   TOOLTIP CUSTOM
+   ============================================ */
+
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::before {
+    content: attr(data-tooltip);
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-base-content text-base-100 text-xs rounded whitespace-nowrap z-50;
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ============================================
+   NAVBAR ENHANCEMENTS
+   ============================================ */
+
+.navbar {
+    @apply backdrop-blur-md;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.navbar.sticky {
+    animation: navbarSlideDown 0.3s ease-out;
+}
+
+@keyframes navbarSlideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   SCROLLBAR CUSTOM (Optional)
+   ============================================ */
+
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-base-200;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-base-content/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-base-content/30;
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.base-content' / 20%) theme('colors.base-200');
+}
+
+/* ============================================
+   TEXT UTILITIES
+   ============================================ */
+
+.text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        @apply bg-white text-black;
+    }
+
+    .card,
+    .alert,
+    .btn {
+        @apply shadow-none border border-gray-300;
+    }
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@media (max-width: 768px) {
+    .stats {
+        @apply grid-cols-1;
+    }
+
+    .card-body {
+        @apply p-4;
+    }
+
+    .modal-box {
+        @apply w-11/12 max-w-md;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================
+   DARK MODE ADJUSTMENTS (Optional)
+   ============================================ */
+
+[data-theme="dark"] .shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .card-hover:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+
+/* ============================================
+   QR CODE STYLING
+   ============================================ */
+
+.qr-code-container {
+    @apply bg-white p-4 rounded-lg inline-block;
+}
+
+.qr-code-container svg {
+    @apply w-full h-auto;
+}
+
+/* ============================================
+   STATUS INDICATORS
+   ============================================ */
+
+.status-indicator {
+    @apply relative inline-flex items-center gap-2;
+}
+
+.status-indicator::before {
+    content: '';
+    @apply w-2 h-2 rounded-full bg-current;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* ============================================
+   CUSTOM COMPONENT STYLES
+   ============================================ */
+
+/* Enhanced dropdown */
+.dropdown-content {
+    animation: dropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tab active indicator */
+.tabs-boxed .tab-active {
+    @apply relative;
+}
+
+.tabs-boxed .tab-active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-primary;
+    animation: tabIndicator 0.3s ease-out;
+}
+
+@keyframes tabIndicator {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+/* ============================================
+   UTILITY HELPERS
+   ============================================ */
+
+.backdrop-blur-lg {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.backdrop-blur-xl {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+/* Gradient text */
+.gradient-text-primary {
+    @apply bg-gradient-to-r from-primary to-primary-focus bg-clip-text text-transparent;
+}
+
+.gradient-text-secondary {
+    @apply bg-gradient-to-r from-secondary to-secondary-focus bg-clip-text text-transparent;
+}
+
+/* Glass morphism effect */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
