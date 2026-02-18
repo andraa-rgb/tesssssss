@@ -3,31 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Booking;
-use App\Models\Jadwal;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class HomeController extends Controller
 {
     /**
      * Display welcome page with list of dosen
      */
-       public function index()
+    public function index()
     {
-        // ambil hanya dosen (role kepala_lab & staf) + relasi yang dibutuhkan
+        // Ambil hanya dosen (role kepala_lab & staf) + relasi yang dibutuhkan
         $dosens = User::whereIn('role', ['kepala_lab', 'staf'])
             ->with(['status', 'jadwals'])
             ->orderBy('name', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($dosen) {
+                // Generate QR SVG untuk setiap dosen ke halaman publiknya
+                $url = route('dosen.show', $dosen->id);
+
+                $dosen->qr_svg = QrCode::format('svg')
+                    ->size(250)
+                    ->margin(2)
+                    ->errorCorrection('H')
+                    ->generate($url);
+
+                return $dosen;
+            });
 
         return view('welcome', compact('dosens'));
         // ATAU:
         // return view('welcome', ['dosens' => $dosens]);
     }
-
-    /**
-     * Display dashboard for authenticated dosen
-     */
 
     /**
      * Display dashboard for authenticated dosen
@@ -54,15 +61,13 @@ class HomeController extends Controller
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
-        // Get schedule for this week (kalau kamu simpan semua hari di jadwals)
+        // Get schedule for this week
         $jadwalMingguIni = $user->jadwals()
             ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
-        // Status real-time (kalau kamu punya tabel status terpisah,
-        // misal model Status dengan kolom user_id, status)
-        // Jika belum punya model, sementara bisa pakai null
+        // Status real-time
         $status = $user->status ?? null;
 
         return view('dashboard', compact(
