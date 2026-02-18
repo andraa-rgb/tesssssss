@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Models\Jadwal;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class HomeController extends Controller
 {
@@ -14,10 +15,10 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Ambil 3 dosen untuk ditampilkan di home
-        // Bisa disesuaikan: semua dosen, atau filter tertentu
+        // Ambil semua dosen untuk ditampilkan di home
         $dosens = User::whereIn('role', ['kepala_lab', 'staf'])
             ->with(['status', 'jadwals', 'bookings'])
+            ->orderBy('name')
             ->get();
 
         return view('welcome', compact('dosens'));
@@ -35,7 +36,7 @@ class HomeController extends Controller
         $status = $user->status;
 
         $jadwalMingguIni = $user->jadwals()
-            ->orderByRaw("FIELD(hari,'Senin','Selasa','Rabu','Kamis','Jumat')")
+            ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat')")
             ->orderBy('jam_mulai')
             ->get();
 
@@ -44,6 +45,6 @@ class HomeController extends Controller
             'pendingBooking',
             'status',
             'jadwalMingguIni'
-        ));
+        ))->with('qrHelper', QrCode::class);
     }
 }

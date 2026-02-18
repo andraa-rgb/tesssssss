@@ -44,6 +44,48 @@
         </div>
     </div>
 
+{{-- CARD QR CODE --}}
+<div class="card bg-base-100 shadow-lg border border-base-300 mt-4">
+    <div class="card-body items-center text-center">
+        <h3 class="card-title text-base mb-2">QR Code Profil</h3>
+        <p class="text-xs text-base-content/70 mb-3">
+            Scan untuk akses cepat ke halaman profil dan booking Anda.
+        </p>
+        
+        {{-- QR Code SVG --}}
+        <div class="bg-white p-4 rounded-lg mb-3">
+            {!! $qrCodeSvg !!}
+        </div>
+        
+        {{-- Actions --}}
+        <div class="flex flex-col gap-2 w-full">
+            <a href="{{ route('profile.qrcode.download') }}" 
+               class="btn btn-primary btn-sm gap-2"
+               download>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download PNG
+            </a>
+            
+            <button type="button" 
+                    onclick="printQrCode()"
+                    class="btn btn-outline btn-sm gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Cetak
+            </button>
+        </div>
+        
+        <div class="text-[10px] text-base-content/50 mt-2">
+            URL: {{ $qrCodeUrl }}
+        </div>
+    </div>
+</div>
+
     {{-- FORM PROFIL & PASSWORD --}}
     <div class="lg:col-span-2 space-y-6">
 
@@ -403,6 +445,70 @@
             }
         });
     </script>
+
+    <script>
+function printQrCode() {
+    // Buat window print khusus QR code
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    const qrSvg = `{!! addslashes($qrCodeSvg) !!}`;
+    const userName = '{{ auth()->user()->name }}';
+    const userNip = '{{ auth()->user()->nip ?? "-" }}';
+    const qrUrl = '{{ $qrCodeUrl }}';
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>QR Code - ${userName}</title>
+            <style>
+                body {
+                    font-family: system-ui, -apple-system, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    background: white;
+                }
+                .qr-container {
+                    text-align: center;
+                    padding: 2rem;
+                    border: 2px solid #ddd;
+                    border-radius: 1rem;
+                }
+                h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+                p { margin: 0.25rem 0; color: #666; font-size: 0.9rem; }
+                .qr-box {
+                    background: white;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    margin: 1rem auto;
+                    display: inline-block;
+                }
+                .url { font-size: 0.75rem; color: #999; margin-top: 1rem; }
+            </style>
+        </head>
+        <body>
+            <div class="qr-container">
+                <h2>${userName}</h2>
+                <p>NIP: ${userNip}</p>
+                <p style="font-weight: 600; margin-top: 0.5rem;">Scan untuk booking konsultasi</p>
+                <div class="qr-box">
+                    ${qrSvg}
+                </div>
+                <div class="url">${qrUrl}</div>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
+}
+</script>
+
 @endpush
 
 
