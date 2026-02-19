@@ -77,29 +77,40 @@ class AdminDosenController extends Controller
      * (Opsional) Update data dosen.
      */
     public function update(Request $request, User $user)
-    {
-        if (! in_array($user->role, ['kepala_lab', 'staf'])) {
-            abort(404);
-        }
-
-        $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'nip'   => ['nullable', 'string', 'max:50'],
-            'role'  => ['required', Rule::in(['kepala_lab', 'staf'])],
-        ]);
-
-        $user->update($data);
-
-        return redirect()
-            ->route('admin.dosen.index')
-            ->with('success', 'Data dosen berhasil diperbarui.');
+{
+    if (! in_array($user->role, ['kepala_lab', 'staf'])) {
+        abort(404);
     }
+
+    $data = $request->validate([
+        'name'  => ['required', 'string', 'max:255'],
+        'email' => [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->ignore($user->id),
+        ],
+        'nip'   => ['nullable', 'string', 'max:50'],
+        'role'  => ['required', Rule::in(['kepala_lab', 'staf'])],
+        // password opsional, minimal 8 jika diisi
+        'password' => ['nullable', 'string', 'min:8'],
+    ]);
+
+    // Jika admin mengisi password baru, hash dan set
+    if (!empty($data['password'])) {
+        $data['password'] = bcrypt($data['password']);
+    } else {
+        // jangan ubah password jika kosong
+        unset($data['password']);
+    }
+
+    $user->update($data);
+
+    return redirect()
+        ->route('admin.dosen.index')
+        ->with('success', 'Data dosen berhasil diperbarui.');
+}
+
 
     /**
      * Hapus akun dosen.

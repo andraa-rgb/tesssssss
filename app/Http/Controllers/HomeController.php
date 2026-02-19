@@ -11,30 +11,32 @@ class HomeController extends Controller
     /**
      * Display welcome page with list of dosen
      */
-    public function index()
-    {
-        // Ambil hanya dosen (role kepala_lab & staf) + relasi yang dibutuhkan
-        $dosens = User::whereIn('role', ['kepala_lab', 'staf'])
-            ->with(['status', 'jadwals'])
-            ->orderBy('name', 'asc')
-            ->get()
-            ->map(function ($dosen) {
-                // Generate QR SVG untuk setiap dosen ke halaman publiknya
-                $url = route('dosen.show', $dosen->id);
+   public function index()
+{
+    // Ambil dosen dengan urutan: kepala_lab dulu, lalu staf, lalu nama A-Z
+    $dosens = User::whereIn('role', ['kepala_lab', 'staf'])
+        ->with(['status', 'jadwals'])
+        ->orderByRaw("FIELD(role, 'kepala_lab', 'staf')")
+        ->orderBy('name', 'asc')
+        ->get()
+        ->map(function ($dosen) {
+            // Generate QR SVG untuk tiap dosen (landing)
+            $url = route('dosen.show', $dosen->id);
 
-                $dosen->qr_svg = QrCode::format('svg')
-                    ->size(250)
-                    ->margin(2)
-                    ->errorCorrection('H')
-                    ->generate($url);
+            $dosen->qr_svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(250)
+                ->margin(2)
+                ->errorCorrection('H')
+                ->generate($url);
 
-                return $dosen;
-            });
+            return $dosen;
+        });
 
-        return view('welcome', compact('dosens'));
-        // ATAU:
+    return view('welcome', compact('dosens'));
+     // ATAU:
         // return view('welcome', ['dosens' => $dosens]);
-    }
+}
+
 
     /**
      * Display dashboard for authenticated dosen

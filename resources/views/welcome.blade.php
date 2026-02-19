@@ -174,20 +174,21 @@
             </a>
             
             @auth
-                <a href="{{ route('dashboard') }}" class="btn btn-primary btn-sm gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    <span class="hidden sm:inline">Dashboard</span>
-                </a>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-outline btn-sm gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    Login
-                </a>
-            @endauth
+    @if(auth()->user()->role === 'admin')
+        <a href="{{ route('admin.dashboard') }}" class="btn btn-primary btn-sm">
+            Dashboard Admin
+        </a>
+    @else
+        <a href="{{ route('dashboard') }}" class="btn btn-primary btn-sm">
+            Dashboard
+        </a>
+    @endif
+@else
+    <a href="{{ route('login') }}" class="btn btn-outline btn-sm">
+        Login
+    </a>
+@endauth
+
             
             {{-- Theme Toggle --}}
             <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm">
@@ -415,7 +416,6 @@
         @endforeach
     </div>
 </section>
-
 
 {{-- FEATURES SECTION --}}
 <section id="features" class="py-20 bg-base-200">

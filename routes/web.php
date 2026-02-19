@@ -149,36 +149,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Admin Routes (Perlu Login + Role Admin)
 |--------------------------------------------------------------------------
 */
+Route::middleware(['auth', 'verified', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+        // ADMIN DASHBOARD
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
 
-    // =============================================
-    // ADMIN DASHBOARD
-    // =============================================
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        // KELOLA DOSEN
+        Route::prefix('dosen')->name('dosen.')->group(function () {
+            Route::get('/', [AdminDosenController::class, 'index'])->name('index');
+            Route::get('/create', [AdminDosenController::class, 'create'])->name('create');
+            Route::post('/', [AdminDosenController::class, 'store'])->name('store');
+            Route::get('/{user}/edit', [AdminDosenController::class, 'edit'])->name('edit');
+            Route::put('/{user}', [AdminDosenController::class, 'update'])->name('update');
+            Route::delete('/{user}', [AdminDosenController::class, 'destroy'])->name('destroy');
+        });
 
-    // =============================================
-    // KELOLA DOSEN
-    // =============================================
-    Route::prefix('dosen')->name('dosen.')->group(function () {
-        Route::get('/', [AdminDosenController::class, 'index'])->name('index');
-        Route::get('/create', [AdminDosenController::class, 'create'])->name('create');
-        Route::post('/', [AdminDosenController::class, 'store'])->name('store');
-        Route::get('/{user}/edit', [AdminDosenController::class, 'edit'])->name('edit');
-        Route::put('/{user}', [AdminDosenController::class, 'update'])->name('update');
-        Route::delete('/{user}', [AdminDosenController::class, 'destroy'])->name('destroy');
+        // KELOLA BOOKING (Admin view all)
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/', [AdminDashboardController::class, 'allBookings'])->name('index');
+            Route::delete('/{booking}', [AdminDashboardController::class, 'deleteBooking'])->name('destroy');
+        });
+
+        // REPORTS & STATISTICS
+        Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
     });
 
-    // =============================================
-    // KELOLA BOOKING (Admin view all)
-    // =============================================
-    Route::prefix('bookings')->name('bookings.')->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'allBookings'])->name('index');
-        Route::delete('/{booking}', [AdminDashboardController::class, 'deleteBooking'])->name('destroy');
-    });
-
-    // =============================================
-    // REPORTS & STATISTICS
-    // =============================================
-    Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
-});
