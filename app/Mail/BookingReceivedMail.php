@@ -16,21 +16,19 @@ class BookingReceivedMail extends Mailable
 
     public $booking;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Booking $booking)
     {
-        $this->booking = $booking;
+        // Eager load relasi user (dosen)
+        $this->booking = $booking->load('user');
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('noreply@labwicida.com', 'Lab WICIDA - Sistem Jadwal'),
+            from: new Address(
+                config('mail.from.address'),
+                config('mail.from.name')
+            ),
             replyTo: [
                 new Address($this->booking->user->email, $this->booking->user->name),
             ],
@@ -38,9 +36,6 @@ class BookingReceivedMail extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -53,11 +48,6 @@ class BookingReceivedMail extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

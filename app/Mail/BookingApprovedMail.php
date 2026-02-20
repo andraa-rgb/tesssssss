@@ -18,13 +18,17 @@ class BookingApprovedMail extends Mailable
 
     public function __construct(Booking $booking)
     {
-        $this->booking = $booking;
+        // Eager load relasi user (dosen)
+        $this->booking = $booking->load('user');
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('noreply@labwicida.com', 'Lab WICIDA - Sistem Jadwal'),
+            from: new Address(
+                config('mail.from.address'),
+                config('mail.from.name')
+            ),
             replyTo: [
                 new Address($this->booking->user->email, $this->booking->user->name),
             ],
