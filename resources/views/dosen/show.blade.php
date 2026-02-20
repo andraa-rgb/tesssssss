@@ -61,14 +61,39 @@
             </a>
         </div>
 
-        {{-- Success Message --}}
+        {{-- Flash Messages --}}
         @if(session('success'))
-            <div class="alert alert-success shadow-lg mb-6 fade-in">
+            <div class="alert alert-success shadow-lg mb-4 fade-in">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-error shadow-lg mb-4 fade-in">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-warning shadow-lg mb-4 fade-in">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0
+                             11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <ul class="list-disc list-inside text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -108,7 +133,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0
-                                            00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                             00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                                 <span class="truncate">{{ $dosen->email }}</span>
                             </div>
@@ -139,13 +164,13 @@
                     </div>
                 </div>
 
-                {{-- Card QR Code (seragam dengan profil) --}}
+                {{-- Card QR Code --}}
                 <div class="card bg-base-100 shadow-xl border border-base-300" id="qrcode-card">
                     <div class="card-body items-center text-center">
                         <h3 class="card-title text-base mb-2 flex items-center gap-2">
                             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a2 2 0 00-2-2h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
                             QR Code Profil
                         </h3>
@@ -188,7 +213,6 @@
 
                         {{-- Actions --}}
                         <div class="flex flex-col gap-2 w-full">
-                            {{-- Download PNG via canvas (tidak pakai route downloadQr) --}}
                             <button type="button"
                                     onclick="downloadQrCode('{{ $dosen->id }}', '{{ $dosen->name }}')"
                                     class="btn btn-primary btn-sm gap-2">
@@ -205,11 +229,11 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M17 17h2a2 2 0 002-2v-4a2 2 0
-                                            00-2-2H5a2 2 0 00-2 2v4a2 2 0
-                                            002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0
-                                            00-2-2H9a2 2 0 00-2 2v4a2 2 0
-                                            002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0
-                                            00-2 2v4h10z" />
+                                             00-2-2H5a2 2 0 00-2 2v4a2 2 0
+                                             002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0
+                                             00-2-2H9a2 2 0 00-2 2v4a2 2 0
+                                             002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0
+                                             00-2 2v4h10z" />
                                 </svg>
                                 Cetak QR Code
                             </button>
@@ -240,12 +264,12 @@
                 @if($dosen->bio)
                     <div class="card bg-base-100 shadow-xl border border-base-300">
                         <div class="card-body">
-                            <h2 class="card-title text-xl mb-3 flex items-center gap-2">
+                            <h2 class="card-title text-xl mb-3 flex itemscenter gap-2">
                                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M16 7a4 4 0 11-8 0 4 4 0
-                                            018 0zM12 14a7 7 0 00-7 7h14a7 7 0
-                                            00-7-7z" />
+                                             018 0zM12 14a7 7 0 00-7 7h14a7 7 0
+                                             00-7-7z" />
                                 </svg>
                                 Tentang
                             </h2>
@@ -264,10 +288,10 @@
                                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4
-                                            12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0
-                                            117.072 0l-.548.547A3.374 3.374 0
-                                            0014 18.469V19a2 2 0 11-4
-                                            0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                             12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0
+                                             117.072 0l-.548.547A3.374 3.374 0
+                                             0014 18.469V19a2 2 0 11-4
+                                             0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                 </svg>
                                 Informasi Akademik
                             </h2>
@@ -287,7 +311,7 @@
                                             <a href="{{ $dosen->scholar_url }}" target="_blank" class="btn btn-outline btn-sm gap-2">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M12 24a7 7 0 110-14 7 7 0 010 14zm0-24L0 9.5l4.838 3.94A8 8 0
-                                                        0112 9a8 8 0 017.162 4.44L24 9.5z"/>
+                                                             0112 9a8 8 0 017.162 4.44L24 9.5z"/>
                                                 </svg>
                                                 Google Scholar
                                             </a>
@@ -297,9 +321,9 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                           d="M9 12h6m-6 4h6m2 5H7a2 2 0
-                                                            01-2-2V5a2 2 0 012-2h5.586a1 1 0
-                                                            01.707.293l5.414 5.414a1 1 0
-                                                            01.293.707V19a2 2 0 01-2 2z" />
+                                                             01-2-2V5a2 2 0 012-2h5.586a1 1 0
+                                                             01.707.293l5.414 5.414a1 1 0
+                                                             01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                                 SINTA
                                             </a>
@@ -309,10 +333,10 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                           d="M21 12a9 9 0 01-9 9m9-9a9 9 0
-                                                            00-9-9m9 9H3m9 9a9 9 0
-                                                            01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0
-                                                            18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9
-                                                            9a9 9 0 019-9" />
+                                                             00-9-9m9 9H3m9 9a9 9 0
+                                                             01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0
+                                                             18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9
+                                                             9a9 9 0 019-9" />
                                                 </svg>
                                                 Website
                                             </a>
@@ -331,8 +355,8 @@
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0
-                                        002-2V7a2 2 0 00-2-2H5a2 2 0
-                                        00-2 2v12a2 2 0 002 2z" />
+                                         002-2V7a2 2 0 00-2-2H5a2 2 0
+                                         00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Jadwal Mingguan
                         </h2>
@@ -367,8 +391,8 @@
                                 <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0
-                                            002-2V7a2 2 0 00-2-2H5a2 2 0
-                                            00-2 2v12a2 2 0 002 2z" />
+                                             002-2V7a2 2 0 00-2-2H5a2 2 0
+                                             00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <p>Jadwal belum tersedia</p>
                             </div>
@@ -383,10 +407,10 @@
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0
-                                        002 2h10a2 2 0 002-2V7a2 2 0
-                                        00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0
-                                        002-2M9 5a2 2 0 012-2h2a2 2 0
-                                        012 2" />
+                                         002 2h10a2 2 0 002-2V7a2 2 0
+                                         00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0
+                                         002-2M9 5a2 2 0 012-2h2a2 2 0
+                                         012 2" />
                             </svg>
                             Booking Konsultasi
                         </h2>
@@ -508,7 +532,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0
-                                            11-18 0 9 9 0 0118 0z" />
+                                             11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <span class="text-sm">
                                     Booking akan menunggu persetujuan dari dosen. Anda akan dihubungi melalui email.
@@ -525,6 +549,7 @@
                         </form>
                     </div>
                 </div>
+
             </div>
         </div>
     </main>

@@ -64,68 +64,101 @@ class DosenPublicController extends Controller
      * Simpan booking dari mahasiswa (publik)
      */
     public function storeBooking(Request $request, User $user)
-    {
-        $validated = $request->validate([
-            'nama_mahasiswa'   => 'required|string|max:255',
-            'nim_mahasiswa'    => 'nullable|string|max:50',
-            'email_mahasiswa'  => 'required|email|max:255',
-            'tanggal_booking'  => 'required|date|after_or_equal:today',
-            'jam_mulai'        => 'required|date_format:H:i',
-            'jam_selesai'      => 'required|date_format:H:i|after:jam_mulai',
-            'keperluan'        => 'required|string|min:10|max:1000',
-        ], [
-            'nama_mahasiswa.required'   => 'Nama mahasiswa wajib diisi.',
-            'email_mahasiswa.required'  => 'Email mahasiswa wajib diisi.',
-            'email_mahasiswa.email'     => 'Format email tidak valid.',
-            'tanggal_booking.required'  => 'Tanggal booking wajib dipilih.',
-            'tanggal_booking.after_or_equal' => 'Tanggal booking tidak boleh kurang dari hari ini.',
-            'jam_mulai.required'       => 'Jam mulai wajib dipilih.',
-            'jam_selesai.required'     => 'Jam selesai wajib dipilih.',
-            'jam_selesai.after'        => 'Jam selesai harus setelah jam mulai.',
-            'keperluan.required'       => 'Keperluan konsultasi wajib diisi.',
-            'keperluan.min'            => 'Keperluan minimal 10 karakter.',
+{
+    $validated = $request->validate([
+        'nama_mahasiswa'   => 'required|string|max:255',
+        'nim_mahasiswa'    => 'nullable|string|max:50',
+        'email_mahasiswa'  => 'required|email|max:255',
+        'tanggal_booking'  => 'required|date|after_or_equal:today',
+        'jam_mulai'        => 'required|date_format:H:i',
+        'jam_selesai'      => 'required|date_format:H:i|after:jam_mulai',
+        'keperluan'        => 'required|string|min:10|max:1000',
+    ], [
+        'nama_mahasiswa.required'   => 'Nama mahasiswa wajib diisi.',
+        'email_mahasiswa.required'  => 'Email mahasiswa wajib diisi.',
+        'email_mahasiswa.email'     => 'Format email tidak valid.',
+        'tanggal_booking.required'  => 'Tanggal booking wajib dipilih.',
+        'tanggal_booking.after_or_equal' => 'Tanggal booking tidak boleh kurang dari hari ini.',
+        'jam_mulai.required'       => 'Jam mulai wajib dipilih.',
+        'jam_selesai.required'     => 'Jam selesai wajib dipilih.',
+        'jam_selesai.after'        => 'Jam selesai harus setelah jam mulai.',
+        'keperluan.required'       => 'Keperluan konsultasi wajib diisi.',
+        'keperluan.min'            => 'Keperluan minimal 10 karakter.',
+    ]);
+
+    // === VALIDASI BARU: CEK BENTROK DENGAN JADWAL TETAP DOSEN ===
+    $tanggalBooking = Carbon::parse($validated['tanggal_booking']);
+    $hariBooking = $tanggalBooking->locale('id')->dayName; // Senin, Selasa, dst.
+
+    $jadwalBentrok = $user->jadwals()
+        ->where('hari', $hariBooking)
+        ->where(function ($query) use ($validated) {
+            $query->whereBetween('jam_mulai', [$validated['jam_mulai'], $validated['jam_selesai']])
+                  ->orWhereBetween('jam_selesai', [$validated['jam_mulai'], $validated['jam_selesai']])
+                  ->orWhere(function ($q) use ($validated) {
+                      $q->where('jam_mulai', '<=', $validated['jam_mulai'])
+                        ->where('jam_selesai', '>=', $validated['jam_selesai']);
+                  });
+        })
+        ->first();
+
+    if ($jadwalBentrok) {
+        return back()
+            ->withInput()
+            ->with('error', 
+                'Waktu yang Anda pilih bentrok dengan jadwal dosen: ' . 
+                $jadwalBentrok->kegiatan . 
+                ' (' . $jadwalBentrok->jam_mulai . ' - ' . $jadwalBentrok->jam_selesai . '). ' .
+                'Silakan pilih waktu lain.'
+            );
+    }
+
+    // Cek bentrok dengan booking mahasiswa lain
+    $conflict = Booking::where('user_id', $user->id)
+        ->where('tanggal_booking', $validated['tanggal_booking'])
+        ->where('status', '!=', 'rejected')
+        ->where(function ($query) use ($validated) {
+            $query->whereBetween('jam_mulai', [$validated['jam_mulai'], $validated['jam_selesai']])
+                  ->orWhereBetween('jam_selesai', [$validated['jam_mulai'], $validated['jam_selesai']])
+                  ->orWhere(function ($q) use ($validated) {
+                      $q->where('jam_mulai', '<=', $validated['jam_mulai'])
+                        ->where('jam_selesai', '>=', $validated['jam_selesai']);
+                  });
+        })
+        ->exists();
+
+    if ($conflict) {
+        return back()
+            ->withInput()
+            ->with('error', 'Jadwal yang Anda pilih sudah dibooking oleh mahasiswa lain. Silakan pilih waktu lain.');
+    }
+
+    $validated['user_id'] = $user->id;
+    $validated['status']  = 'pending';
+
+    $booking = Booking::create($validated);
+
+    \Log::info('Booking baru dibuat', [
+        'booking_id' => $booking->id,
+        'user_id'    => $booking->user_id,
+        'email'      => $booking->email_mahasiswa,
+    ]);
+
+    try {
+        Mail::to($booking->email_mahasiswa)->send(new BookingReceivedMail($booking));
+        $message = 'Booking berhasil dikirim! Email konfirmasi telah dikirim ke ' . $booking->email_mahasiswa;
+    } catch (\Throwable $e) {
+        \Log::error('Email gagal terkirim', [
+            'booking_id' => $booking->id,
+            'error'      => $e->getMessage(),
         ]);
 
-        $conflict = Booking::where('user_id', $user->id)
-            ->where('tanggal_booking', $validated['tanggal_booking'])
-            ->where('status', '!=', 'rejected')
-            ->where(function ($query) use ($validated) {
-                $query->whereBetween('jam_mulai', [$validated['jam_mulai'], $validated['jam_selesai']])
-                      ->orWhereBetween('jam_selesai', [$validated['jam_mulai'], $validated['jam_selesai']])
-                      ->orWhere(function ($q) use ($validated) {
-                          $q->where('jam_mulai', '<=', $validated['jam_mulai'])
-                            ->where('jam_selesai', '>=', $validated['jam_selesai']);
-                      });
-            })
-            ->exists();
-
-        if ($conflict) {
-            return back()
-                ->withInput()
-                ->with('error', 'Jadwal yang Anda pilih sudah dibooking oleh mahasiswa lain. Silakan pilih waktu lain.');
-        }
-
-        $validated['user_id'] = $user->id;
-        $validated['status']  = 'pending';
-
-        $booking = Booking::create($validated);
-
-        try {
-            Mail::to($booking->email_mahasiswa)->send(new BookingReceivedMail($booking));
-            $message = 'Booking berhasil dikirim! Email konfirmasi telah dikirim ke ' . $booking->email_mahasiswa;
-        } catch (\Exception $e) {
-            Log::error('Email gagal terkirim', [
-                'booking_id' => $booking->id,
-                'error'      => $e->getMessage(),
-            ]);
-
-            $message = 'Booking berhasil dikirim! Namun email konfirmasi gagal dikirim. Silakan cek status booking Anda nanti.';
-        }
-
-        return redirect()
-            ->route('dosen.show', $user)
-            ->with('success', $message);
+        $message = 'Booking berhasil dikirim! Namun email konfirmasi gagal dikirim. Silakan cek status booking Anda nanti.';
     }
+
+    return back()->with('success', $message);
+}
+
 
     /**
      * API: Get jadwal dosen (untuk AJAX)

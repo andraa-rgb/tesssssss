@@ -15,18 +15,24 @@ class BookingController extends Controller
      * Tampilkan list booking untuk dosen yang login
      * View: resources/views/dosen/booking/index.blade.php
      */
-    public function index()
-    {
-        $user = auth()->user();
+   public function index(Request $request)
+{
+    $user = auth()->user();
 
-        $bookings = $user->bookings()
-            ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
-            ->orderBy('tanggal_booking', 'desc')
-            ->orderBy('jam_mulai', 'desc')
-            ->paginate(15);
+    $bookingsQuery = $user->bookings()
+        ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
+        ->orderBy('tanggal_booking', 'desc')
+        ->orderBy('jam_mulai', 'desc');
 
-        return view('dosen.booking.index', compact('bookings'));
+    if ($request->filled('status')) {
+        $bookingsQuery->where('status', $request->status);
     }
+
+    $bookings = $bookingsQuery->paginate(15)->withQueryString();
+
+    return view('dosen.booking.index', compact('bookings'));
+}
+
 
     /**
      * Approve booking

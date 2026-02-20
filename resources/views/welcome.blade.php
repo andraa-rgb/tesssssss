@@ -323,9 +323,7 @@
                    class="input input-sm input-bordered" />
 
             <select id="sort-dosen" class="select select-sm select-bordered">
-                <option value="">Urutkan</option>
-                <option value="name">Nama A-Z</option>
-                <option value="name-desc">Nama Z-A</option>
+                <option value="">Urutkan berdasarkan jabatan</option>
             </select>
         </div>
     </div>
@@ -336,195 +334,160 @@
 
     {{-- GRID DOSEN --}}
     <div id="dosen-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-       @foreach($dosens as $dosen)
-    <div class="group relative">
-        <div
-            class="card bg-base-100 border border-base-300/80 shadow-sm
-                   transition-all duration-300 ease-out
-                   hover:-translate-y-1 hover:shadow-xl hover:border-primary/60
-                   cursor-pointer overflow-hidden">
+        @foreach($dosens as $dosen)
+            <div class="group relative dosen-card"
+                 data-dosen-name="{{ strtolower($dosen->name) }}"
+                 data-dosen-role="{{ $dosen->role }}">
+                <div
+                    class="card bg-base-100 border border-base-300/80 shadow-sm
+                           transition-all duration-300 ease-out
+                           hover:-translate-y-1 hover:shadow-xl hover:border-primary/60
+                           cursor-pointer overflow-hidden">
 
-            {{-- Ribbon Role di pojok kiri atas --}}
-            <div class="absolute left-0 top-0 z-10">
-                @if($dosen->role === 'kepala_lab')
-                    <span class="badge badge-primary badge-sm rounded-none rounded-br-lg">
-                        Kepala Lab
-                    </span>
-                @else
-                    <span class="badge badge-secondary badge-sm rounded-none rounded-br-lg">
-                        Staf
-                    </span>
-                @endif
-            </div>
+                    {{-- Ribbon Role di pojok kiri atas --}}
+                    <div class="absolute left-0 top-0 z-10">
+                        @if($dosen->role === 'kepala_lab')
+                            <span class="badge badge-primary badge-sm rounded-none rounded-br-lg">
+                                Kepala Lab
+                            </span>
+                        @else
+                            <span class="badge badge-secondary badge-sm rounded-none rounded-br-lg">
+                                Staf
+                            </span>
+                        @endif
+                    </div>
 
-            <div class="card-body gap-3">
+                    <div class="card-body gap-3">
 
-                {{-- Header: Avatar + Nama + Status --}}
-                <div class="flex items-start gap-4">
-                    {{-- Avatar dengan border animasi --}}
-                    <div class="relative shrink-0">
-                        <div
-                            class="rounded-full p-[2px]
-                                   bg-gradient-to-br from-primary/70 via-secondary/70 to-accent/70
-                                   transition-all duration-300
-                                   group-hover:from-primary group-hover:via-secondary group-hover:to-accent">
-                            <div class="avatar">
-                                @if($dosen->photo)
-                                    <div class="w-16 h-16 rounded-full bg-base-100 shadow-inner overflow-hidden">
-                                        <img src="{{ asset('storage/' . $dosen->photo) }}" alt="{{ $dosen->name }}">
+                        {{-- Header: Avatar + Nama + Status --}}
+                        <div class="flex items-start gap-4">
+                            {{-- Avatar dengan border animasi --}}
+                            <div class="relative shrink-0">
+                                <div
+                                    class="rounded-full p-[2px]
+                                           bg-gradient-to-br from-primary/70 via-secondary/70 to-accent/70
+                                           transition-all duration-300
+                                           group-hover:from-primary group-hover:via-secondary group-hover:to-accent">
+                                    <div class="avatar">
+                                        @if($dosen->photo)
+                                            <div class="w-16 h-16 rounded-full bg-base-100 shadow-inner overflow-hidden">
+                                                <img src="{{ asset('storage/' . $dosen->photo) }}" alt="{{ $dosen->name }}">
+                                            </div>
+                                        @else
+                                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content flex items-center justify-center text-2xl font-bold">
+                                                {{ substr($dosen->name, 0, 1) }}
+                                            </div>
+                                        @endif
                                     </div>
-                                @else
-                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content flex items-center justify-center text-2xl font-bold">
-                                        {{ substr($dosen->name, 0, 1) }}
+                                </div>
+                            </div>
+
+                            <div class="flex-1 min-w-0 space-y-1">
+                                <h3 class="font-semibold text-base md:text-lg truncate">
+                                    {{ $dosen->name }}
+                                </h3>
+
+                                {{-- Email + NIP --}}
+                                <div class="flex flex-col gap-0.5 text-[11px] text-base-content/70">
+                                    @if($dosen->email)
+                                        <div class="flex items-center gap-1.5 truncate">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M3 8l7.89 5.26a2 2 0
+                                                         002.22 0L21 8M5 19h14a2 2 0
+                                                         002-2V7a2 2 0 00-2-2H5a2 2 0
+                                                         00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="truncate">{{ $dosen->email }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($dosen->nip)
+                                        <div class="flex items-center gap-1.5 truncate">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M9 12h6m-6 4h6M5 7h14M5 7a2 2 0
+                                                         012-2h10a2 2 0 012 2v10a2 2 0
+                                                         01-2 2H7a2 2 0 01-2-2V7z" />
+                                            </svg>
+                                            <span class="truncate">{{ $dosen->nip }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Bidang keahlian --}}
+                                @if($dosen->expertise)
+                                    <p class="text-xs md:text-sm text-base-content/80 font-medium mt-1">
+                                        {{ $dosen->expertise }}
+                                    </p>
+                                @endif
+
+                                {{-- Deskripsi singkat (bio) --}}
+                                @if($dosen->bio)
+                                    <p class="text-[11px] md:text-xs text-base-content/70 line-clamp-3 mt-1">
+                                        {{ \Illuminate\Support\Str::limit($dosen->bio, 160) }}
+                                    </p>
+                                @endif
+
+                                {{-- Status --}}
+                                @if($dosen->status)
+                                    @php
+                                        $statusColors = [
+                                            'Ada'        => 'badge-success',
+                                            'Mengajar'   => 'badge-warning',
+                                            'Konsultasi' => 'badge-info',
+                                            'Tidak Ada'  => 'badge-ghost',
+                                        ];
+                                        $statusColor = $statusColors[$dosen->status->status] ?? 'badge-ghost';
+                                    @endphp
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <span class="badge {{ $statusColor }} badge-xs gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current animate-ping"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                        </span>
+                                        <span class="text-[11px] uppercase tracking-wide text-base-content/60">
+                                            {{ $dosen->status->status }}
+                                        </span>
                                     </div>
                                 @endif
                             </div>
                         </div>
-                    </div>
 
-                    <div class="flex-1 min-w-0 space-y-1">
-                        <h3 class="font-semibold text-base md:text-lg truncate">
-                            {{ $dosen->name }}
-                        </h3>
+                        {{-- Divider --}}
+                        <div class="border-t border-base-300/60 my-1.5"></div>
 
-                        {{-- Email + NIP --}}
-                        <div class="flex flex-col gap-0.5 text-[11px] text-base-content/70">
-                            @if($dosen->email)
-                                <div class="flex items-center gap-1.5 truncate">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M3 8l7.89 5.26a2 2 0
-                                                002.22 0L21 8M5 19h14a2 2 0
-                                                002-2V7a2 2 0 00-2-2H5a2 2 0
-                                                00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                    <span class="truncate">{{ $dosen->email }}</span>
-                                </div>
+                        {{-- Link eksternal (Scholar / SINTA / Website) --}}
+                        <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                            @if($dosen->scholar_url)
+                                <a href="{{ $dosen->scholar_url }}" target="_blank"
+                                   class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-primary hover:text-primary-content">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                    <span>Google Scholar</span>
+                                </a>
                             @endif
 
-                            @if($dosen->nip)
-                                <div class="flex items-center gap-1.5 truncate">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M9 12h6m-6 4h6M5 7h14M5 7a2 2 0
-                                                012-2h10a2 2 0 012 2v10a2 2 0
-                                                01-2 2H7a2 2 0 01-2-2V7z" />
-                                    </svg>
-                                    <span class="truncate">{{ $dosen->nip }}</span>
-                                </div>
+                            @if($dosen->sinta_url)
+                                <a href="{{ $dosen->sinta_url }}" target="_blank"
+                                   class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-secondary hover:text-secondary-content">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                    <span>SINTA / Portal Riset</span>
+                                </a>
+                            @endif
+
+                            @if($dosen->website_url)
+                                <a href="{{ $dosen->website_url }}" target="_blank"
+                                   class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-accent hover:text-accent-content">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                                    <span>Website Portofolio</span>
+                                </a>
                             @endif
                         </div>
-
-                        {{-- Bidang keahlian --}}
-                        @if($dosen->expertise)
-                            <p class="text-xs md:text-sm text-base-content/80 font-medium mt-1">
-                                {{ $dosen->expertise }}
-                            </p>
-                        @endif
-
-                        {{-- Deskripsi singkat (bio) --}}
-                        @if($dosen->bio)
-                            <p class="text-[11px] md:text-xs text-base-content/70 line-clamp-3 mt-1">
-                                {{ \Illuminate\Support\Str::limit($dosen->bio, 160) }}
-                            </p>
-                        @endif
-
-                        {{-- Status --}}
-                        @if($dosen->status)
-                            @php
-                                $statusColors = [
-                                    'Ada'        => 'badge-success',
-                                    'Mengajar'   => 'badge-warning',
-                                    'Konsultasi' => 'badge-info',
-                                    'Tidak Ada'  => 'badge-ghost',
-                                ];
-                                $statusColor = $statusColors[$dosen->status->status] ?? 'badge-ghost';
-                            @endphp
-                            <div class="mt-1 flex items-center gap-2">
-                                <span class="badge {{ $statusColor }} badge-xs gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-current animate-ping"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                </span>
-                                <span class="text-[11px] uppercase tracking-wide text-base-content/60">
-                                    {{ $dosen->status->status }}
-                                </span>
-                            </div>
-                        @endif
                     </div>
                 </div>
-
-                {{-- Divider --}}
-                <div class="border-t border-base-300/60 my-1.5"></div>
-
-                {{-- Link eksternal (Scholar / SINTA / Website) --}}
-                <div class="flex flex-wrap items-center gap-2 text-[11px]">
-                    @if($dosen->scholar_url)
-                        <a href="{{ $dosen->scholar_url }}" target="_blank"
-                           class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-primary hover:text-primary-content">
-                            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                            <span>Google Scholar</span>
-                        </a>
-                    @endif
-
-                    @if($dosen->sinta_url)
-                        <a href="{{ $dosen->sinta_url }}" target="_blank"
-                           class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-secondary hover:text-secondary-content">
-                            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-                            <span>SINTA / Portal Riset</span>
-                        </a>
-                    @endif
-
-                    @if($dosen->website_url)
-                        <a href="{{ $dosen->website_url }}" target="_blank"
-                           class="btn btn-ghost btn-xs gap-1.5 rounded-full hover:btn-accent hover:text-accent-content">
-                            <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
-                            <span>Website Portofolio</span>
-                        </a>
-                    @endif
-                </div>
-
-                {{-- QR SVG tersembunyi --}}
-                <div id="qr-svg-{{ $dosen->id }}" class="hidden">
-                    {!! $dosen->qr_svg !!}
-                </div>
-
-                {{-- Actions --}}
-                <div class="mt-2 flex justify-between items-center gap-2">
-                    <button type="button"
-                            onclick="showQrModal({{ $dosen->id }}, '{{ $dosen->name }}')"
-                            class="btn btn-xs md:btn-sm btn-outline gap-2 rounded-full
-                                   transition-all duration-200
-                                   group-hover:btn-primary group-hover:text-primary-content">
-                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0
-                                    001-1V5a1 1 0 00-1-1H5a1 1 0
-                                    00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0
-                                    001-1V5a1 1 0 00-1-1h-2a1 1 0
-                                    00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0
-                                    001-1v-2a1 1 0 00-1-1H5a1 1 0
-                                    00-1 1v2a1 1 0 001 1z" />
-                        </svg>
-                        QR Code
-                    </button>
-
-                    <a href="{{ route('dosen.show', $dosen) }}"
-                       class="btn btn-xs md:btn-sm btn-primary rounded-full gap-2">
-                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0
-                                    11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Detail
-                    </a>
-                </div>
             </div>
-        </div>
+        @endforeach
     </div>
-@endforeach
-
-    </div>
-</section>
+    </section>
 
 {{-- FEATURES SECTION --}}
 <section id="features" class="py-20 bg-base-200">
@@ -880,64 +843,74 @@
     }
 
     // Search & Filter (tetap seperti semula)
+    document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('search-dosen');
-    const sortSelect = document.getElementById('sort-dosen');
-    const grid = document.getElementById('dosen-grid');
-    const noResults = document.getElementById('no-results');
+    const sortSelect  = document.getElementById('sort-dosen');
+    const grid        = document.getElementById('dosen-grid');
+    const noResults   = document.getElementById('no-results');
 
     function getDosenCards() {
-    if (!grid) return [];
-    return Array.from(grid.querySelectorAll('.dosen-card'));
-}
-
-    if (searchInput) {
-        searchInput.addEventListener('input', filterDosen);
+        if (!grid) return [];
+        return Array.from(grid.querySelectorAll('.dosen-card'));
     }
 
-    if (sortSelect) {
-        sortSelect.addEventListener('change', sortDosen);
-    }
+    function filterDosen() {
+        const search = (searchInput?.value || '').toLowerCase().trim();
+        const cards  = getDosenCards();
+        let visible  = 0;
 
-function filterDosen() {
-    const search = (searchInput?.value || '').toLowerCase();
-    const cards  = getDosenCards();
-    let visible  = 0;
+        cards.forEach(card => {
+            const name = (card.dataset.dosenName || '').toLowerCase();
+            const match = !search || (name && name.includes(search));
 
-    cards.forEach(card => {
-        const name = (card.dataset.dosenName || '').toLowerCase();
-        if (name && name.includes(search)) {
-            card.style.display = '';
-            visible++;
-        } else {
-            card.style.display = 'none';
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        if (noResults && grid) {
+            if (visible === 0) {
+                noResults.classList.remove('hidden');
+                grid.style.display = 'none';
+            } else {
+                noResults.classList.add('hidden');
+                grid.style.display = 'grid';
+            }
         }
-    });
-
-    if (noResults && grid) {
-        noResults.style.display = visible === 0 ? 'block' : 'none';
-        grid.style.display      = visible === 0 ? 'none'  : 'grid';
     }
-}
 
-
-    function sortDosen() {
+function sortDosen() {
     const sort  = sortSelect?.value || '';
     const cards = getDosenCards();
     if (!sort || cards.length === 0) return;
 
     cards.sort((a, b) => {
-        const nameA = (a.dataset.dosenName || '').toLowerCase();
-        const nameB = (b.dataset.dosenName || '').toLowerCase();
+        const roleA = (a.dataset.dosenRole || '').toLowerCase();
+        const roleB = (b.dataset.dosenRole || '').toLowerCase();
 
-        if (!nameA || !nameB) return 0;
+        // fallback kalau role kosong
+        if (!roleA || !roleB) return 0;
 
-        if (sort === 'name')      return nameA.localeCompare(nameB);
-        if (sort === 'name-desc') return nameB.localeCompare(nameA);
+        if (sort === 'role-asc')   return roleA.localeCompare(roleB);
+        if (sort === 'role-desc')  return roleB.localeCompare(roleA);
         return 0;
     });
 
     cards.forEach(card => grid.appendChild(card));
 }
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            filterDosen();
+            sortDosen(); // jaga urutan setelah filter
+        });
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            sortDosen();
+            filterDosen(); // jaga visibilitas setelah sort
+        });
+    }
+        }); 
 
 
     // Smooth scroll

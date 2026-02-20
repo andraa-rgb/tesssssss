@@ -11,31 +11,41 @@ class HomeController extends Controller
     /**
      * Display welcome page with list of dosen
      */
-   public function index()
+  public function index(Request $request)
 {
-    // Ambil dosen dengan urutan: kepala_lab dulu, lalu staf, lalu nama A-Z
-    $dosens = User::whereIn('role', ['kepala_lab', 'staf'])
+    $query = User::whereIn('role', ['kepala_lab', 'staf'])
         ->with(['status', 'jadwals'])
         ->orderByRaw("FIELD(role, 'kepala_lab', 'staf')")
-        ->orderBy('name', 'asc')
-        ->get()
-        ->map(function ($dosen) {
-            // Generate QR SVG untuk tiap dosen (landing)
-            $url = route('dosen.show', $dosen->id);
+        ->orderBy('name', 'asc');
 
-            $dosen->qr_svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-                ->size(250)
-                ->margin(2)
-                ->errorCorrection('H')
-                ->generate($url);
-
-            return $dosen;
+    // Filter by search text (nama / email)
+    if ($request->filled('q')) {
+        $search = $request->q;
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
         });
+    }
+
+    // Filter by role
+    if ($request->filled('role')) {
+        $query->where('role', $request->role);
+    }
+
+    $dosens = $query->get()->map(function ($dosen) {
+        $url = route('dosen.show', $dosen->id);
+        $dosen->qr_svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(250)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($url);
+        return $dosen;
+    });
 
     return view('welcome', compact('dosens'));
+}
      // ATAU:
         // return view('welcome', ['dosens' => $dosens]);
-}
 
 
     /**
@@ -72,7 +82,7 @@ class HomeController extends Controller
         // Status real-time
         $status = $user->status ?? null;
 
-        return view('dashboard', compact(
+        return view('dosen.dashboard', compact(
             'totalJadwal',
             'totalBooking',
             'pendingBooking',

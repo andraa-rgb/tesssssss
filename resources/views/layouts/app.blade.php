@@ -63,7 +63,7 @@
                                     </a>
                                 </li>
                             @else
-                                {{-- MENU DOSEN SEDERHANA --}}
+                                {{-- MENU DOSEN: Beranda, Dashboard, Jadwal, Booking, Profil --}}
                                 <li>
                                     <a href="{{ route('home') }}"
                                        class="{{ request()->routeIs('home') ? 'active font-semibold' : '' }}">
@@ -71,14 +71,21 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('home') }}#dosen">
-                                        Dosen
+                                    <a href="{{ route('dashboard') }}"
+                                       class="{{ request()->routeIs('dashboard') ? 'active font-semibold' : '' }}">
+                                        Dashboard
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('dashboard') }}"
-                                       class="{{ request()->routeIs('dashboard') || request()->routeIs('jadwal.*') || request()->routeIs('booking.*') ? 'active font-semibold' : '' }}">
-                                        Dashboard
+                                    <a href="{{ route('jadwal.create') }}"
+                                       class="{{ request()->routeIs('jadwal.create') ? 'active font-semibold' : '' }}">
+                                        Jadwal
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('booking.index') }}"
+                                       class="{{ request()->routeIs('booking.*') ? 'active font-semibold' : '' }}">
+                                        Booking
                                     </a>
                                 </li>
                                 <li>
@@ -126,6 +133,15 @@
 
                             @if($role !== 'admin')
                                 <li>
+                                    <a href="{{ route('dashboard') }}" class="py-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                        Dashboard
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('profile.edit') }}" class="py-3">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -172,8 +188,9 @@
                                 <li><a href="{{ route('home') }}">Lihat Landing</a></li>
                             @else
                                 <li><a href="{{ route('home') }}">Beranda</a></li>
-                                <li><a href="{{ route('home') }}#dosen">Dosen</a></li>
                                 <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                                <li><a href="{{ route('jadwal.create') }}">Jadwal</a></li>
+                                <li><a href="{{ route('booking.index') }}">Booking</a></li>
                                 <li><a href="{{ route('profile.edit') }}">Profil</a></li>
                             @endif
                             <div class="divider my-0"></div>
@@ -195,7 +212,7 @@
                     </div>
                 </div>
             @else
-                {{-- Kalau belum login, tampilkan tombol login di kanan --}}
+                {{-- Kalau belum login, tampilkan tombol login --}}
                 <a href="{{ route('login') }}" class="btn btn-outline btn-sm">
                     Login
                 </a>
