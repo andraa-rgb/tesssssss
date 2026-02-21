@@ -54,6 +54,9 @@ class AdminDosenController extends Controller
 
         $data['password'] = bcrypt($data['password']);
 
+        // Penting: dosen baru langsung dianggap verifikasi email
+        $data['email_verified_at'] = now();
+
         User::create($data);
 
         return redirect()
@@ -62,7 +65,7 @@ class AdminDosenController extends Controller
     }
 
     /**
-     * (Opsional) Form edit dosen – kalau suatu saat mau.
+     * Form edit dosen.
      */
     public function edit(User $user)
     {
@@ -74,43 +77,39 @@ class AdminDosenController extends Controller
     }
 
     /**
-     * (Opsional) Update data dosen.
+     * Update data dosen.
      */
     public function update(Request $request, User $user)
-{
-    if (! in_array($user->role, ['kepala_lab', 'staf'])) {
-        abort(404);
+    {
+        if (! in_array($user->role, ['kepala_lab', 'staf'])) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'nip'   => ['nullable', 'string', 'max:50'],
+            'role'  => ['required', Rule::in(['kepala_lab', 'staf'])],
+            'password' => ['nullable', 'string', 'min:8'],
+        ]);
+
+        if (!empty($data['password'])) {
+            $data['password'] = bcrypt($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return redirect()
+            ->route('admin.dosen.index')
+            ->with('success', 'Data dosen berhasil diperbarui.');
     }
-
-    $data = $request->validate([
-        'name'  => ['required', 'string', 'max:255'],
-        'email' => [
-            'required',
-            'email',
-            'max:255',
-            Rule::unique('users', 'email')->ignore($user->id),
-        ],
-        'nip'   => ['nullable', 'string', 'max:50'],
-        'role'  => ['required', Rule::in(['kepala_lab', 'staf'])],
-        // password opsional, minimal 8 jika diisi
-        'password' => ['nullable', 'string', 'min:8'],
-    ]);
-
-    // Jika admin mengisi password baru, hash dan set
-    if (!empty($data['password'])) {
-        $data['password'] = bcrypt($data['password']);
-    } else {
-        // jangan ubah password jika kosong
-        unset($data['password']);
-    }
-
-    $user->update($data);
-
-    return redirect()
-        ->route('admin.dosen.index')
-        ->with('success', 'Data dosen berhasil diperbarui.');
-}
-
 
     /**
      * Hapus akun dosen.
@@ -121,7 +120,6 @@ class AdminDosenController extends Controller
             abort(403, 'Hanya akun dosen yang dapat dihapus melalui menu ini.');
         }
 
-        // (Opsional) Cek agar admin tidak menghapus dirinya sendiri di sini
         if ($user->id === auth()->id()) {
             return back()->with('success', 'Admin tidak dapat menghapus dirinya sendiri dari menu ini.');
         }

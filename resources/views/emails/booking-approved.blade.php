@@ -33,7 +33,7 @@ Kabar baik! Booking konsultasi Anda telah **DISETUJUI** oleh {{ $dosen->name }}.
 ## 📍 Lokasi Konsultasi
 
 **{{ $dosen->ruangan }}**  
-Lab WICIDA - Universitas Mulawarman
+Lab WICIDA - STMIK WICIDA
 @endif
 
 ## 📌 Catatan Penting
@@ -58,5 +58,5 @@ Sampai jumpa di konsultasi! 🎓
 
 Terima kasih,<br>
 **{{ config('app.name') }}**<br>
-Lab WICIDA - Universitas Mulawarman
+Lab WICIDA - STMIK Wicida  
 </x-mail::message>
