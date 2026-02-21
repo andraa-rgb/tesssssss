@@ -31,5 +31,5 @@ Lihat Detail Booking
 
 Terima kasih,<br>
 **{{ config('app.name') }}**<br>
-Lab WICIDA - Universitas Mulawarman
+Lab WICIDA - STMIK Wicida
 </x-mail::message>

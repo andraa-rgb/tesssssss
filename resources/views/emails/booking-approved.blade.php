@@ -15,10 +15,21 @@ Kabar baik! Booking konsultasi Anda telah **DISETUJUI** oleh {{ $dosen->name }}.
 @endif
 **Tanggal:** {{ \Carbon\Carbon::parse($booking->tanggal_booking)->locale('id')->translatedFormat('l, d F Y') }}  
 **Waktu:** {{ date('H:i', strtotime($booking->jam_mulai)) }} - {{ date('H:i', strtotime($booking->jam_selesai)) }} WITA  
+@if($booking->ruangan)
+**Ruangan:** {{ $booking->ruangan }}  
+@endif
 **Keperluan:** {{ $booking->keperluan }}
 </x-mail::panel>
 
-@if($dosen->ruangan)
+@if($booking->catatan_dosen)
+## 📝 Catatan dari Dosen
+
+<x-mail::panel>
+{{ $booking->catatan_dosen }}
+</x-mail::panel>
+@endif
+
+@if(!$booking->ruangan && $dosen->ruangan)
 ## 📍 Lokasi Konsultasi
 
 **{{ $dosen->ruangan }}**  

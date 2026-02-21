@@ -19,6 +19,85 @@
 
         {{-- STATISTIK RINGKASAN --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {{-- JADWAL HARI INI (RUTIN + BOOKING DISETUJUI) --}}
+<div class="card bg-base-100 shadow-lg border border-base-300">
+    <div class="card-body">
+        <h2 class="card-title mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Jadwal Hari Ini
+            <span class="badge badge-outline text-xs">
+                {{ now()->locale('id')->translatedFormat('l, d M Y') }}
+            </span>
+        </h2>
+
+        @if(isset($todayAllEvents) && $todayAllEvents->isNotEmpty())
+            <div class="space-y-3">
+                @foreach($todayAllEvents as $event)
+                    <div class="flex items-start justify-between p-3 rounded-xl border border-base-300/70 bg-base-200/60 hover:shadow-md transition-shadow">
+                        <div class="flex-1">
+                            <div class="text-xs uppercase tracking-widest text-base-content/60">
+                                {{ \Carbon\Carbon::createFromFormat('H:i:s', $event['jam_mulai'])->format('H:i') }}
+                                – {{ \Carbon\Carbon::createFromFormat('H:i:s', $event['jam_selesai'])->format('H:i') }}
+                            </div>
+                            <div class="font-semibold text-sm mt-1 flex items-center gap-2">
+                                {{ $event['kegiatan'] }}
+                                @if($event['tipe'] === 'booking')
+                                    <span class="badge badge-success badge-xs">Booking Approved</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-base-content/70 mt-1">
+                                <span class="inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {{ $event['ruangan'] ?? '-' }}
+                                </span>
+                                @if($event['tipe'] === 'booking' && !empty($event['nama_mahasiswa']))
+                                    <span class="ml-2">·</span>
+                                    <span class="inline-flex items-center gap-1 ml-2">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        {{ $event['nama_mahasiswa'] }}
+                                        @if(!empty($event['nim_mahasiswa']))
+                                            <span class="text-[10px] opacity-70">({{ $event['nim_mahasiswa'] }})</span>
+                                        @endif
+                                    </span>
+                                @endif
+                            </div>
+                            @if(!empty($event['keterangan']))
+                                <div class="text-[11px] text-base-content/60 mt-2 italic">
+                                    "{{ $event['keterangan'] }}"
+                                </div>
+                            @endif
+                        </div>
+                        <div class="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full font-medium
+                                    {{ $event['tipe'] === 'booking' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary' }}">
+                            {{ $event['tipe'] === 'booking' ? 'Konsultasi' : 'Jadwal Rutin' }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-6 text-base-content/60 text-sm">
+                <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p>Belum ada jadwal atau booking untuk hari ini.</p>
+            </div>
+        @endif
+    </div>
+</div>
+
             
             {{-- Card Total Jadwal --}}
             <div class="stats shadow-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">

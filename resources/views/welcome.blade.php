@@ -265,51 +265,169 @@
                 </div>
             </div>
 
-            {{-- Right Content (Illustration) --}}
-            <div class="hidden lg:block animate-fadeIn delay-400">
-                <div class="relative">
-                    <div class="absolute inset-0 bg-gradient-primary rounded-3xl opacity-20 blur-2xl animate-float"></div>
-                    <div class="relative bg-base-100 rounded-3xl shadow-2xl p-8">
-                        <div class="space-y-4">
-                            {{-- Mock calendar UI --}}
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="text-lg font-bold">Jadwal Hari Ini</div>
-                                <div class="badge badge-primary">Live</div>
+    {{-- Right Content (Upcoming Schedule Slider) --}}
+<div class="hidden lg:block animate-fadeIn delay-400">
+    <div class="relative">
+        <div class="absolute inset-0 bg-gradient-primary rounded-3xl opacity-20 blur-2xl animate-float"></div>
+        <div class="relative bg-base-100 rounded-3xl shadow-2xl p-6 lg:p-8 overflow-hidden">
+            {{-- Header --}}
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <div class="text-xs uppercase tracking-widest text-base-content/60">
+                        Jadwal Terdekat
+                    </div>
+                    <div class="text-lg font-bold flex items-center gap-2">
+                        Live Activity
+                        <span class="inline-flex items-center gap-1 text-xs text-success">
+                            <span class="w-2 h-2 rounded-full bg-success animate-ping"></span>
+                            <span class="w-2 h-2 rounded-full bg-success -ml-3"></span>
+                            Online
+                        </span>
+                    </div>
+                </div>
+                <div class="badge badge-outline badge-sm">
+                    {{ now()->translatedFormat('d M Y') }}
+                </div>
+            </div>
+
+            <div id="schedule-slider" class="space-y-3 relative">
+    @php
+        $items = $upcomingSchedules ?? [];
+    @endphp
+
+    @forelse($items as $index => $item)
+        @php
+            $dosen = $item->user;
+            $statusMap = [
+                'Ada'        => ['label' => 'Siap Konsultasi', 'class' => 'badge-success'],
+                'Mengajar'   => ['label' => 'Sedang Mengajar', 'class' => 'badge-warning'],
+                'Konsultasi' => ['label' => 'Dalam Konsultasi', 'class' => 'badge-info'],
+                'Tidak Ada'  => ['label' => 'Tidak Tersedia', 'class' => 'badge-ghost'],
+            ];
+            $statusKey  = $dosen?->status->status ?? 'Tidak Ada';
+            $statusConf = $statusMap[$statusKey] ?? $statusMap['Tidak Ada'];
+        @endphp
+
+        {{-- GANTI: pakai hidden/block, bukan absolute --}}
+        <div class="schedule-slide transition-opacity duration-500 {{ $index === 0 ? '' : 'hidden' }}">
+            <div class="flex flex-col gap-4">
+                {{-- isi slide sama seperti sebelumnya --}}
+                {{-- Top row: time + status --}}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-base-content/60">
+                                {{ $item->hari }},
+                                {{ \Carbon\Carbon::createFromFormat('H:i:s', $item->jam_mulai)->format('H:i') }}
+                                – {{ \Carbon\Carbon::createFromFormat('H:i:s', $item->jam_selesai)->format('H:i') }}
                             </div>
-                            @foreach(['08:00 - 10:00', '10:00 - 12:00', '13:00 - 15:00'] as $time)
-                                <div class="flex items-center gap-4 p-4 bg-base-200 rounded-xl hover:shadow-md transition-shadow">
-                                    <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-sm">{{ $time }}</div>
-                                        <div class="text-xs text-base-content/60">Jadwal Tersedia</div>
-                                    </div>
-                                    <div class="badge badge-success badge-sm gap-1">
-                                        <span class="status-dot w-1.5 h-1.5 rounded-full bg-current"></span>
-                                        Ada
-                                    </div>
-                                </div>
-                            @endforeach
+                            <div class="text-sm font-semibold">
+                                {{ $item->kegiatan ?? 'Kegiatan Akademik' }}
+                            </div>
                         </div>
                     </div>
+
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="badge {{ $statusConf['class'] }} badge-sm gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-current status-dot"></span>
+                            {{ $statusConf['label'] }}
+                        </span>
+                        <span class="text-[11px] text-base-content/60">
+                            Ruang: {{ $item->ruangan ?? '-' }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Dosen info --}}
+                <div class="flex items-center gap-4 p-3 rounded-2xl bg-base-200/70 border border-base-300/60">
+                    <div class="avatar">
+                        @if($dosen?->photo)
+                            <div class="w-12 h-12 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+                                <img src="{{ asset('storage/' . $dosen->photo) }}" alt="{{ $dosen->name }}">
+                            </div>
+                        @else
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content flex items-center justify-center text-lg font-bold">
+                                {{ substr($dosen->name ?? 'D', 0, 1) }}
+                            </div>
+                        @endif
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-sm truncate">
+                                {{ $dosen->name ?? 'Dosen Tidak Diketahui' }}
+                            </p>
+                            @if($dosen?->role === 'kepala_lab')
+                                <span class="badge badge-primary badge-xs">Kepala Lab</span>
+                            @else
+                                <span class="badge badge-secondary badge-xs">Staf</span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-base-content/60 truncate">
+                            {{ $dosen->expertise ?? 'Bidang keahlian belum diatur' }}
+                        </p>
+                    </div>
+                    @if($dosen)
+                        <button type="button"
+                                onclick="showQrModal({{ $dosen->id }}, '{{ $dosen->name }}')"
+                                class="btn btn-ghost btn-xs rounded-full gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M3 4h7v7H3V4zm0 9h7v7H3v-7zm11-9h7v7h-7V4zm0 9h7v7h-7v-7z" />
+                            </svg>
+                            QR
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Footer info --}}
+                <div class="flex items-center justify-between text-[11px] text-base-content/60">
+                    <span class="inline-flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ $item->hari }}
+                    </span>
+                    @if($dosen)
+                        <a href="{{ route('dosen.show', $dosen->id) }}"
+                           class="link link-primary text-[11px] flex items-center gap-1">
+                            Detail Dosen
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
-    </div>
+    @empty
+        <div class="text-center text-sm text-base-content/60 py-10">
+            Belum ada jadwal terdekat yang terdaftar.
+        </div>
+    @endforelse
+</div>
 
-    {{-- Scroll Indicator --}}
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden md:block">
-        <a href="#dosen" class="flex flex-col items-center gap-2 text-base-content/50 hover:text-base-content transition-colors">
-            <span class="text-xs font-medium">Scroll</span>
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-        </a>
+
+            {{-- Slider indicators --}}
+            @if(!empty($items) && count($items) > 1)
+                <div class="mt-4 flex items-center justify-center gap-1.5">
+                    @foreach($items as $i => $item)
+                        <button type="button" class="schedule-dot w-2 h-2 rounded-full bg-base-300 {{ $i === 0 ? 'bg-primary' : '' }}"
+                                data-index="{{ $i }}"></button>
+                    @endforeach
+                </div>
+            @endif
+        </div>
     </div>
-</section>
+</div>
+
 
 {{-- DOSEN SECTION --}}
 <section id="dosen" class="max-w-6xl mx-auto px-4 py-16">
@@ -482,12 +600,39 @@
                                 </a>
                             @endif
                         </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-    </section>
+
+                        {{-- TOMBOL AKSI --}}
+                        <div class="flex gap-2 mt-4">
+                            <a href="{{ route('dosen.show', $dosen->id) }}" 
+                            class="btn btn-primary btn-sm flex-1 gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Lihat Profil
+                            </a>
+                            
+                            <button type="button"
+                                    onclick="showQrModal({{ $dosen->id }}, '{{ $dosen->name }}')"
+                                    class="btn btn-outline btn-sm gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                                QR Code
+                            </button>
+                        </div>
+
+                        {{-- QR SVG Container (hidden) --}}
+                        <div id="qr-svg-{{ $dosen->id }}" class="hidden">
+                            {!! $dosen->qr_svg !!}
+                        </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            </section>
 
 {{-- FEATURES SECTION --}}
 <section id="features" class="py-20 bg-base-200">
@@ -707,12 +852,12 @@
 </dialog>
 
 {{-- JAVASCRIPT --}}
-<script>
-    // Theme toggle
+    <script>
+    // THEME TOGGLE
     const html = document.documentElement;
     const toggle = document.getElementById('theme-toggle');
     const savedTheme = localStorage.getItem('theme') || 'light';
-    
+
     html.setAttribute('data-theme', savedTheme);
     if (toggle) {
         toggle.checked = savedTheme === 'dark';
@@ -746,7 +891,6 @@
         document.getElementById('qr-url-display').value = currentQrUrl;
         document.getElementById('copy-feedback').classList.add('hidden');
 
-        // Ambil SVG dari container tersembunyi
         const svgContainer = document.getElementById('qr-svg-' + dosenId);
         if (!svgContainer) {
             document.getElementById('qr-modal-content').innerHTML = `
@@ -842,76 +986,131 @@
         }
     }
 
-    // Search & Filter (tetap seperti semula)
+    // SEMUA LOGIKA DOM (SLIDER + FILTER DOSEN)
     document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('search-dosen');
-    const sortSelect  = document.getElementById('sort-dosen');
-    const grid        = document.getElementById('dosen-grid');
-    const noResults   = document.getElementById('no-results');
+        // Elemen untuk dosen grid
+        const searchInput = document.getElementById('search-dosen');
+        const sortSelect  = document.getElementById('sort-dosen');
+        const grid        = document.getElementById('dosen-grid');
+        const noResults   = document.getElementById('no-results');
 
-    function getDosenCards() {
-        if (!grid) return [];
-        return Array.from(grid.querySelectorAll('.dosen-card'));
-    }
+        // Elemen untuk slider jadwal
+        const slides = Array.from(document.querySelectorAll('.schedule-slide'));
+        const dots   = Array.from(document.querySelectorAll('.schedule-dot'));
 
-    function filterDosen() {
-        const search = (searchInput?.value || '').toLowerCase().trim();
-        const cards  = getDosenCards();
-        let visible  = 0;
+        // === SLIDER JADWAL ===
+        if (slides.length > 0) {
+            let currentIndex = 0;
+            let timer        = null;
+            const interval   = 5000; // 5 detik per slide
 
-        cards.forEach(card => {
-            const name = (card.dataset.dosenName || '').toLowerCase();
-            const match = !search || (name && name.includes(search));
-
-            card.style.display = match ? '' : 'none';
-            if (match) visible++;
-        });
-
-        if (noResults && grid) {
-            if (visible === 0) {
-                noResults.classList.remove('hidden');
-                grid.style.display = 'none';
-            } else {
-                noResults.classList.add('hidden');
-                grid.style.display = 'grid';
-            }
+            function showSlide(index) {
+    slides.forEach((slide, i) => {
+        if (i === index) {
+            slide.classList.remove('hidden', 'opacity-0');
+            slide.classList.add('opacity-100');
+        } else {
+            slide.classList.add('hidden', 'opacity-0');
+            slide.classList.remove('opacity-100');
         }
-    }
-
-function sortDosen() {
-    const sort  = sortSelect?.value || '';
-    const cards = getDosenCards();
-    if (!sort || cards.length === 0) return;
-
-    cards.sort((a, b) => {
-        const roleA = (a.dataset.dosenRole || '').toLowerCase();
-        const roleB = (b.dataset.dosenRole || '').toLowerCase();
-
-        // fallback kalau role kosong
-        if (!roleA || !roleB) return 0;
-
-        if (sort === 'role-asc')   return roleA.localeCompare(roleB);
-        if (sort === 'role-desc')  return roleB.localeCompare(roleA);
-        return 0;
     });
 
-    cards.forEach(card => grid.appendChild(card));
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('bg-primary', i === index);
+        dot.classList.toggle('bg-base-300', i !== index);
+    });
+
+    currentIndex = index;
 }
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            filterDosen();
-            sortDosen(); // jaga urutan setelah filter
-        });
-    }
 
-    if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            sortDosen();
-            filterDosen(); // jaga visibilitas setelah sort
-        });
-    }
-        }); 
 
+            function nextSlide() {
+                const next = (currentIndex + 1) % slides.length;
+                showSlide(next);
+            }
+
+            function startAuto() {
+                if (timer) clearInterval(timer);
+                timer = setInterval(nextSlide, interval);
+            }
+
+            // Dot click
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const idx = parseInt(dot.dataset.index, 10);
+                    showSlide(idx);
+                    startAuto();
+                });
+            });
+
+            // Start slider
+            showSlide(0);
+            startAuto();
+        }
+
+        // === FILTER & SORT DOSEN ===
+        function getDosenCards() {
+            if (!grid) return [];
+            return Array.from(grid.querySelectorAll('.dosen-card'));
+        }
+
+        function filterDosen() {
+            const search = (searchInput?.value || '').toLowerCase().trim();
+            const cards  = getDosenCards();
+            let visible  = 0;
+
+            cards.forEach(card => {
+                const name  = (card.dataset.dosenName || '').toLowerCase();
+                const match = !search || (name && name.includes(search));
+
+                card.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            if (noResults && grid) {
+                if (visible === 0) {
+                    noResults.classList.remove('hidden');
+                    grid.style.display = 'none';
+                } else {
+                    noResults.classList.add('hidden');
+                    grid.style.display = 'grid';
+                }
+            }
+        }
+
+        function sortDosen() {
+            const sort  = sortSelect?.value || '';
+            const cards = getDosenCards();
+            if (!sort || cards.length === 0) return;
+
+            cards.sort((a, b) => {
+                const roleA = (a.dataset.dosenRole || '').toLowerCase();
+                const roleB = (b.dataset.dosenRole || '').toLowerCase();
+
+                if (!roleA || !roleB) return 0;
+
+                if (sort === 'role-asc')   return roleA.localeCompare(roleB);
+                if (sort === 'role-desc')  return roleB.localeCompare(roleA);
+                return 0;
+            });
+
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                filterDosen();
+                sortDosen();
+            });
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => {
+                sortDosen();
+                filterDosen();
+            });
+        }
+    });
 
     // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -928,6 +1127,7 @@ function sortDosen() {
         });
     });
 </script>
+
 
 
 </body>

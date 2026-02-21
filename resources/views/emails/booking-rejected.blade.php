@@ -3,43 +3,38 @@
 
 Halo **{{ $booking->nama_mahasiswa }}**,
 
-Mohon maaf, booking konsultasi Anda dengan {{ $dosen->name }} tidak dapat disetujui.
+Mohon maaf, booking konsultasi Anda dengan {{ $dosen->name }} **ditolak**.
 
 ## 📋 Detail Booking
 
 <x-mail::panel>
 **Dosen:** {{ $dosen->name }}  
-**Tanggal:** {{ \Carbon\Carbon::parse($booking->tanggal_booking)->locale('id')->translatedFormat('l, d F Y') }}  
-**Waktu:** {{ date('H:i', strtotime($booking->jam_mulai)) }} - {{ date('H:i', strtotime($booking->jam_selesai)) }} WITA
+**Tanggal yang Diminta:** {{ \Carbon\Carbon::parse($booking->tanggal_booking)->locale('id')->translatedFormat('l, d F Y') }}  
+**Waktu yang Diminta:** {{ date('H:i', strtotime($booking->jam_mulai)) }} - {{ date('H:i', strtotime($booking->jam_selesai)) }} WITA  
+**Keperluan:** {{ $booking->keperluan }}
 </x-mail::panel>
 
-## 📝 Alasan Penolakan
+## ⚠️ Alasan Penolakan
 
 <x-mail::panel>
-{{ $booking->alasan_reject ?? 'Tidak ada catatan.' }}
+{{ $booking->alasan_reject }}
 </x-mail::panel>
 
-## 🔄 Langkah Selanjutnya
+## 💡 Langkah Selanjutnya
 
 Anda dapat:
+- Booking kembali dengan jadwal yang berbeda
+- Menghubungi dosen untuk koordinasi jadwal alternatif
 
-1. **Ajukan booking ulang** dengan jadwal berbeda
-2. **Hubungi dosen** untuk diskusi jadwal alternatif
-3. **Pilih dosen lain** yang tersedia
-
-<x-mail::button :url="$url" color="primary">
+<x-mail::button :url="route('mahasiswa.dosen.show', $dosen->id)" color="error">
 Booking Ulang
-</x-mail::button>
-
-<x-mail::button :url="'mailto:' . $dosen->email" color="secondary">
-Hubungi Dosen
 </x-mail::button>
 
 ---
 
-**Butuh penjelasan lebih lanjut?** Balas email ini untuk menghubungi {{ $dosen->name }}.
+**Butuh bantuan?** Hubungi {{ $dosen->email }}
 
-Terima kasih atas pengertiannya,<br>
+Terima kasih,<br>
 **{{ config('app.name') }}**<br>
 Lab WICIDA - Universitas Mulawarman
 </x-mail::message>

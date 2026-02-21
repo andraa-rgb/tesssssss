@@ -260,6 +260,67 @@
             {{-- MAIN CONTENT --}}
             <div class="lg:col-span-2 space-y-6 fade-in">
 
+{{-- Card Jadwal Hari Ini --}}
+<div class="card bg-base-100 shadow-xl border border-base-300">
+    <div class="card-body">
+        <h2 class="card-title text-xl mb-3 flex items-center gap-2">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Jadwal Hari Ini
+            <span class="badge badge-outline text-xs">
+                {{ now()->locale('id')->translatedFormat('l, d M Y') }}
+            </span>
+        </h2>
+
+        @if(isset($todayEvents) && $todayEvents->isNotEmpty())
+            <div class="space-y-3">
+                @foreach($todayEvents as $event)
+                    <div class="flex items-start justify-between p-3 rounded-xl border border-base-300/70 bg-base-200/60">
+                        <div class="flex-1">
+                            <div class="text-xs uppercase tracking-widest text-base-content/60">
+                                {{ \Carbon\Carbon::createFromFormat('H:i:s', $event['jam_mulai'])->format('H:i') }}
+                                –
+                                {{ \Carbon\Carbon::createFromFormat('H:i:s', $event['jam_selesai'])->format('H:i') }}
+                            </div>
+                            <div class="font-semibold text-sm mt-1 flex items-center gap-2">
+                                {{ $event['kegiatan'] }}
+                                @if($event['tipe'] === 'booking')
+                                    <span class="badge badge-success badge-xs">Booking Approved</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-base-content/70 mt-1">
+                                Ruang: {{ $event['ruangan'] ?? '-' }}
+                                @if($event['tipe'] === 'booking' && !empty($event['nama_mahasiswa']))
+                                    · Mahasiswa: {{ $event['nama_mahasiswa'] }}
+                                    @if(!empty($event['nim_mahasiswa']))
+                                        <span class="text-[10px] opacity-70">({{ $event['nim_mahasiswa'] }})</span>
+                                    @endif
+                                @endif
+                            </div>
+                            @if(!empty($event['keterangan']))
+                                <div class="text-[11px] text-base-content/60 mt-1">
+                                    {{ $event['keterangan'] }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full font-medium
+                                    {{ $event['tipe'] === 'booking' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary' }}">
+                            {{ $event['tipe'] === 'booking' ? 'Konsultasi' : 'Jadwal Rutin' }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-6 text-base-content/60 text-sm">
+                Belum ada jadwal atau booking untuk hari ini.
+            </div>
+        @endif
+    </div>
+</div>
+
+
                 {{-- Card Bio --}}
                 @if($dosen->bio)
                     <div class="card bg-base-100 shadow-xl border border-base-300">

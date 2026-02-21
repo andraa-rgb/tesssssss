@@ -35,6 +35,15 @@
     </div>
 @endif
 
+@if(session('error'))
+    <div class="alert alert-error shadow-lg mb-6 animate-fade-in">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ session('error') }}</span>
+    </div>
+@endif
+
 {{-- Stats Cards with Gradient --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="stat bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl shadow-lg border border-primary/20 hover:shadow-xl transition-all duration-300">
@@ -201,6 +210,24 @@
                                             <div class="font-semibold">{{ date('H:i', strtotime($booking->jam_mulai)) }} - {{ date('H:i', strtotime($booking->jam_selesai)) }}</div>
                                         </div>
                                     </div>
+
+                                    {{-- Display Ruangan if exists --}}
+                                    @if($booking->ruangan)
+                                        <div class="flex items-center gap-2 text-sm md:col-span-2">
+                                            <div class="avatar placeholder">
+                                                <div class="bg-base-200 rounded-lg w-8 h-8">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-base-content/60">Ruangan</div>
+                                                <div class="font-semibold">{{ $booking->ruangan }}</div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -220,6 +247,23 @@
                             </div>
                         </div>
 
+                        {{-- Catatan Dosen --}}
+                        @if($booking->catatan_dosen)
+                            <div class="card bg-info/10 shadow-sm border border-info/20">
+                                <div class="card-body p-4">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-info mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <div class="flex-1">
+                                            <div class="text-sm font-semibold text-info mb-1">Catatan Dosen:</div>
+                                            <p class="text-base leading-relaxed">{{ $booking->catatan_dosen }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Alasan Reject --}}
                         @if($booking->status == 'rejected' && $booking->alasan_reject)
                             <div class="alert alert-error shadow-md">
@@ -235,77 +279,104 @@
                     </div>
 
                     {{-- Action Buttons --}}
-                    @if($booking->status == 'pending')
-                        <div class="flex lg:flex-col gap-2 lg:min-w-[140px]">
-                            <form method="POST" action="{{ route('booking.approve', $booking) }}" class="flex-1">
+                    <div class="flex lg:flex-col gap-2 lg:min-w-[140px]">
+                        @if($booking->status == 'pending')
+                            {{-- Tombol Edit --}}
+                            <a href="{{ route('booking.edit', $booking) }}" 
+                               class="btn btn-info btn-outline w-full gap-2 shadow-lg hover:shadow-xl transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit
+                            </a>
+
+                            {{-- Tombol Setujui Langsung --}}
+                            <form method="POST" action="{{ route('booking.approve', $booking) }}">
                                 @csrf
-                                <button type="submit" class="btn btn-success w-full gap-2 shadow-lg hover:shadow-xl transition-all">
+                                <button type="submit" class="btn btn-success w-full gap-2 shadow-lg hover:shadow-xl transition-all"
+                                        onclick="return confirm('Setujui booking ini tanpa perubahan?')">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                     Setujui
                                 </button>
                             </form>
-                            <button class="btn btn-error w-full gap-2 shadow-lg hover:shadow-xl transition-all flex-1" 
+
+                            {{-- Tombol Tolak --}}
+                            <button class="btn btn-error w-full gap-2 shadow-lg hover:shadow-xl transition-all" 
                                     onclick="rejectModal{{ $booking->id }}.showModal()">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                                 Tolak
                             </button>
-                        </div>
 
-                        {{-- Reject Modal - Enhanced --}}
-                        <dialog id="rejectModal{{ $booking->id }}" class="modal">
-                            <div class="modal-box max-w-md">
-                                <h3 class="font-bold text-xl mb-2 flex items-center gap-2">
-                                    <span class="text-error text-2xl">⚠️</span>
-                                    Tolak Booking Konsultasi
-                                </h3>
-                                <p class="text-sm text-base-content/70 mb-4">
-                                    Booking dari <span class="font-semibold">{{ $booking->nama_mahasiswa }}</span>
-                                </p>
-                                
-                                <form method="POST" action="{{ route('booking.reject', $booking) }}" class="space-y-4">
-                                    @csrf
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text font-semibold">Alasan Penolakan <span class="text-error">*</span></span>
-                                        </label>
-                                        <textarea name="alasan_reject" 
-                                                  class="textarea textarea-bordered h-32" 
-                                                  placeholder="Jelaskan dengan jelas mengapa booking ini ditolak. Informasi ini akan membantu mahasiswa memahami alasan penolakan."
-                                                  required></textarea>
-                                        <label class="label">
-                                            <span class="label-text-alt text-base-content/60">Minimal 10 karakter</span>
-                                        </label>
-                                    </div>
+                            {{-- Reject Modal --}}
+                            <dialog id="rejectModal{{ $booking->id }}" class="modal">
+                                <div class="modal-box max-w-md">
+                                    <h3 class="font-bold text-xl mb-2 flex items-center gap-2">
+                                        <span class="text-error text-2xl">⚠️</span>
+                                        Tolak Booking Konsultasi
+                                    </h3>
+                                    <p class="text-sm text-base-content/70 mb-4">
+                                        Booking dari <span class="font-semibold">{{ $booking->nama_mahasiswa }}</span>
+                                    </p>
+                                    
+                                    <form method="POST" action="{{ route('booking.reject', $booking) }}" class="space-y-4">
+                                        @csrf
+                                        <div class="form-control">
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Alasan Penolakan <span class="text-error">*</span></span>
+                                            </label>
+                                            <textarea name="alasan_reject" 
+                                                      class="textarea textarea-bordered h-32" 
+                                                      placeholder="Jelaskan dengan jelas mengapa booking ini ditolak. Informasi ini akan membantu mahasiswa memahami alasan penolakan."
+                                                      required></textarea>
+                                            <label class="label">
+                                                <span class="label-text-alt text-base-content/60">Minimal 10 karakter</span>
+                                            </label>
+                                        </div>
 
-                                    <div class="alert alert-warning">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span class="text-sm">Mahasiswa akan melihat alasan penolakan ini.</span>
-                                    </div>
-
-                                    <div class="modal-action">
-                                        <button type="button" class="btn btn-ghost" onclick="rejectModal{{ $booking->id }}.close()">
-                                            Batal
-                                        </button>
-                                        <button type="submit" class="btn btn-error gap-2">
+                                        <div class="alert alert-warning">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Tolak Booking
-                                        </button>
-                                    </div>
+                                            <span class="text-sm">Mahasiswa akan melihat alasan penolakan ini.</span>
+                                        </div>
+
+                                        <div class="modal-action">
+                                            <button type="button" class="btn btn-ghost" onclick="rejectModal{{ $booking->id }}.close()">
+                                                Batal
+                                            </button>
+                                            <button type="submit" class="btn btn-error gap-2">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Tolak Booking
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <form method="dialog" class="modal-backdrop">
+                                    <button>close</button>
                                 </form>
+                            </dialog>
+                        @elseif($booking->status == 'approved')
+                            <div class="badge badge-success badge-lg gap-2 p-4">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Sudah Disetujui
                             </div>
-                            <form method="dialog" class="modal-backdrop">
-                                <button>close</button>
-                            </form>
-                        </dialog>
-                    @endif
+                        @elseif($booking->status == 'rejected')
+                            <div class="badge badge-error badge-lg gap-2 p-4">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Sudah Ditolak
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

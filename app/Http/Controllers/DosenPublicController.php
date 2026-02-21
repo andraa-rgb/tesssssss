@@ -18,47 +18,95 @@ class DosenPublicController extends Controller
      * Tampilkan profil dan jadwal dosen (publik)
      */
     public function show(User $user)
-    {
-        // load relasi yang dipakai di view (status & jadwals)
-        $user->load(['status', 'jadwals']);
+{
+    // load relasi yang dipakai di view (status & jadwals)
+    $user->load(['status', 'jadwals']);
 
-        // jadwal mingguan
-        $jadwals = $user->jadwals()
-            ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
-            ->orderBy('jam_mulai', 'asc')
-            ->get()
-            ->groupBy('hari');
+    // jadwal mingguan (untuk tabel di bawah)
+    $jadwals = $user->jadwals()
+        ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
+        ->orderBy('jam_mulai', 'asc')
+        ->get()
+        ->groupBy('hari');
 
-        // status saat ini
-        $now         = Carbon::now('Asia/Makassar');
-        $dayName     = $now->locale('id')->dayName;
-        $currentTime = $now->format('H:i:s');
+    // status saat ini (jadwal yang sedang berlangsung)
+    $now         = Carbon::now('Asia/Makassar');
+    $dayName     = $now->locale('id')->dayName;
+    $currentTime = $now->format('H:i:s');
 
-        $currentSchedule = $user->jadwals()
-            ->where('hari', $dayName)
-            ->where('jam_mulai', '<=', $currentTime)
-            ->where('jam_selesai', '>=', $currentTime)
-            ->first();
+    $currentSchedule = $user->jadwals()
+        ->where('hari', $dayName)
+        ->where('jam_mulai', '<=', $currentTime)
+        ->where('jam_selesai', '>=', $currentTime)
+        ->first();
 
-        // === TAMBAHAN: QR CODE UNTUK HALAMAN PUBLIK DOSEN INI ===
-        $qrCodeUrl = route('dosen.show', $user->id);
+    // === JADWAL HARI INI UNTUK USER (jadwal rutin + booking approved) ===
 
-        $qrCodeSvg = QrCode::format('svg')
-            ->size(250)
-            ->style('round')
-            ->eye('circle')
-            ->margin(2)
-            ->errorCorrection('H')
-            ->generate($qrCodeUrl);
+    // Jadwal rutin hari ini dari tabel jadwals
+    $todaySchedule = $user->jadwals()
+        ->where('hari', $dayName)
+        ->orderBy('jam_mulai', 'asc')
+        ->get();
 
-        return view('dosen.show', [
-            'dosen'           => $user,
-            'jadwals'         => $jadwals,
-            'currentSchedule' => $currentSchedule,
-            'qrCodeUrl'       => $qrCodeUrl,
-            'qrCodeSvg'       => $qrCodeSvg,
+    // Booking approved hari ini dari tabel bookings
+    $todayApprovedBookings = $user->bookings()
+        ->whereDate('tanggal_booking', $now->toDateString())
+        ->where('status', 'approved')
+        ->orderBy('jam_mulai', 'asc')
+        ->get();
+
+    // Gabungkan ke satu collection
+    $todayEvents = collect();
+
+    foreach ($todaySchedule as $j) {
+        $todayEvents->push([
+            'tipe'           => 'jadwal',
+            'jam_mulai'      => $j->jam_mulai,
+            'jam_selesai'    => $j->jam_selesai,
+            'kegiatan'       => $j->kegiatan,
+            'ruangan'        => $j->ruangan,
+            'keterangan'     => $j->keterangan,
+            'nama_mahasiswa' => null,
+            'nim_mahasiswa'  => null,
         ]);
     }
+
+    foreach ($todayApprovedBookings as $b) {
+        $todayEvents->push([
+            'tipe'           => 'booking',
+            'jam_mulai'      => $b->jam_mulai,
+            'jam_selesai'    => $b->jam_selesai,
+            'kegiatan'       => 'Konsultasi (Booking)',
+            'ruangan'        => 'Ruang Konsultasi',
+            'keterangan'     => $b->keperluan,
+            'nama_mahasiswa' => $b->nama_mahasiswa,
+            'nim_mahasiswa'  => $b->nim_mahasiswa,
+        ]);
+    }
+
+    $todayEvents = $todayEvents->sortBy('jam_mulai')->values();
+
+    // === QR CODE UNTUK HALAMAN PUBLIK DOSEN INI ===
+    $qrCodeUrl = route('dosen.show', $user->id);
+
+    $qrCodeSvg = QrCode::format('svg')
+        ->size(250)
+        ->style('round')
+        ->eye('circle')
+        ->margin(2)
+        ->errorCorrection('H')
+        ->generate($qrCodeUrl);
+
+    return view('dosen.show', [
+        'dosen'           => $user,
+        'jadwals'         => $jadwals,
+        'currentSchedule' => $currentSchedule,
+        'qrCodeUrl'       => $qrCodeUrl,
+        'qrCodeSvg'       => $qrCodeSvg,
+        'todayEvents'     => $todayEvents, // <- tambahan penting
+    ]);
+}
+
 
     /**
      * Simpan booking dari mahasiswa (publik)

@@ -21,10 +21,6 @@ use App\Models\User;
 // Home/Welcome - Menampilkan daftar dosen
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Detail Dosen (Publik) - Bisa diakses tanpa login
-Route::get('/dosen/{user}', [DosenPublicController::class, 'show'])->name('dosen.show');
-Route::post('/dosen/{user}/booking', [DosenPublicController::class, 'storeBooking'])->name('dosen.booking.store');
-
 // Download QR Code PNG (dipakai landing page & profil dosen)
 Route::get('/dosen/{user}/qrcode/download', [DosenPublicController::class, 'downloadQr'])
     ->name('dosen.qrcode.download');
@@ -95,7 +91,7 @@ Route::prefix('api')->name('api.')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -105,42 +101,32 @@ require __DIR__ . '/auth.php';
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // =============================================
     // DASHBOARD DOSEN
-    // =============================================
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
-    // =============================================
     // PROFILE MANAGEMENT
-    // =============================================
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
-
-        // Password Update
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
-
-        // QR Code Download (profil dosen pakai route publik yang sama, tidak perlu method khusus di ProfileController)
-        // Di Blade: route('dosen.qrcode.download', auth()->id())
     });
 
-    // =============================================
     // JADWAL MANAGEMENT (CRUD)
-    // =============================================
     Route::resource('jadwal', JadwalController::class)->except(['show']);
 
-    // =============================================
     // BOOKING MANAGEMENT (UNTUK DOSEN YANG LOGIN)
-    // =============================================
-    Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
-    Route::post('/booking/{booking}/approve', [BookingController::class, 'approve'])->name('booking.approve');
-    Route::post('/booking/{booking}/reject', [BookingController::class, 'reject'])->name('booking.reject');
-    Route::delete('/booking/{booking}', [BookingController::class, 'destroy'])->name('booking.destroy');
+    // PENTING: Harus di atas route /dosen/{user} supaya tidak ketabrak
+    Route::prefix('dosen/bookings')->name('booking.')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('index');
+        Route::get('/{booking}/edit', [BookingController::class, 'edit'])->name('edit');
+        Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
+        Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve');
+        Route::post('/{booking}/reject', [BookingController::class, 'reject'])->name('reject');
+        Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');
+    });
 
-    // =============================================
     // STATUS REAL-TIME UPDATE
-    // =============================================
     Route::post('/api/status/update', [StatusController::class, 'update'])->name('api.status.update');
 });
 
@@ -149,6 +135,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Admin Routes (Perlu Login + Role Admin)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth', 'verified', 'admin'])
     ->prefix('admin')
     ->name('admin.')
@@ -178,3 +165,14 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
     });
 
+/*
+|--------------------------------------------------------------------------
+| Public Dosen Routes
+| PENTING: Harus di paling bawah karena menggunakan wildcard {user}
+|--------------------------------------------------------------------------
+*/
+
+// Detail Dosen (Publik) - Bisa diakses tanpa login
+// Route ini menggunakan {user} wildcard, jadi harus di bawah semua route /dosen/* yang spesifik
+Route::get('/dosen/{user}', [DosenPublicController::class, 'show'])->name('dosen.show');
+Route::post('/dosen/{user}/booking', [DosenPublicController::class, 'storeBooking'])->name('dosen.booking.store');
