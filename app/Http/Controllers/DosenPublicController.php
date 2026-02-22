@@ -64,23 +64,33 @@ class DosenPublicController extends Controller
             'jam_mulai'      => $j->jam_mulai,
             'jam_selesai'    => $j->jam_selesai,
             'kegiatan'       => $j->kegiatan,
-            'ruangan'        => $j->ruangan,
+            'ruangan'        => $j->ruangan ?? '-',
+            'ruangan_nama'   => $j->ruangan ?? '-',
             'keterangan'     => $j->keterangan,
             'nama_mahasiswa' => null,
             'nim_mahasiswa'  => null,
+            'booking_id'     => null, // jadwal rutin tidak punya booking_id
         ]);
     }
 
+    // ✅ PERBAIKAN BAGIAN INI
     foreach ($todayApprovedBookings as $b) {
         $todayEvents->push([
             'tipe'           => 'booking',
             'jam_mulai'      => $b->jam_mulai,
             'jam_selesai'    => $b->jam_selesai,
-            'kegiatan'       => 'Konsultasi (Booking)',
-            'ruangan'        => 'Ruang Konsultasi',
+            'kegiatan'       => 'Konsultasi: ' . \Illuminate\Support\Str::limit($b->keperluan, 40),
+            
+            // ✅ Ambil langsung dari kolom ruangan (string)
+            'ruangan'        => $b->ruangan ?? 'Belum ditentukan',
+            'ruangan_nama'   => $b->ruangan ?? 'Belum ditentukan',
+            
             'keterangan'     => $b->keperluan,
             'nama_mahasiswa' => $b->nama_mahasiswa,
             'nim_mahasiswa'  => $b->nim_mahasiswa,
+            
+            // ✅ PENTING: untuk bisa diklik
+            'booking_id'     => $b->id,
         ]);
     }
 
@@ -103,7 +113,7 @@ class DosenPublicController extends Controller
         'currentSchedule' => $currentSchedule,
         'qrCodeUrl'       => $qrCodeUrl,
         'qrCodeSvg'       => $qrCodeSvg,
-        'todayEvents'     => $todayEvents, // <- tambahan penting
+        'todayEvents'     => $todayEvents,
     ]);
 }
 

@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    // Tidak perlu protected $table, Laravel otomatis pakai 'bookings'
-
     protected $fillable = [
         'user_id',
         'nama_mahasiswa',
@@ -17,7 +15,7 @@ class Booking extends Model
         'jam_mulai',
         'jam_selesai',
         'keperluan',
-        'ruangan',
+        'ruangan',           // ← ini kolom string biasa
         'catatan_dosen',
         'status',
         'alasan_reject',
@@ -35,4 +33,7 @@ class Booking extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // ❌ TIDAK PERLU ini karena ruangan bukan foreign key:
+    // public function ruangan() { ... }
 }

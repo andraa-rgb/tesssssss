@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Jadwal;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Carbon\Carbon;
 
 class HomeController extends Controller
 {
@@ -64,28 +65,32 @@ class HomeController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        
+
         // Get statistics
-        $totalJadwal     = $user->jadwals()->count();
-        $totalBooking    = $user->bookings()->count();
-        $pendingBooking  = $user->bookings()->where('status', 'pending')->count();
-        $approvedBooking = $user->bookings()->where('status', 'approved')->count();
-        
+        $totalJadwal      = $user->jadwals()->count();
+        $totalBooking     = $user->bookings()->count();
+        $pendingBooking   = $user->bookings()->where('status', 'pending')->count();
+        $approvedBooking  = $user->bookings()->where('status', 'approved')->count();
+
         // Get recent bookings (last 5)
         $recentBookings = $user->bookings()
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
-        
+
+        // Hari ini (nama hari Indonesia)
+        $today = Carbon::now();
+        $hariIni = $today->locale('id')->dayName;
+
         // Get today's schedule (jadwal rutin dari tabel jadwals)
         $todaySchedule = $user->jadwals()
-            ->where('hari', now()->locale('id')->dayName)
+            ->where('hari', $hariIni)
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
         // Booking approved untuk hari ini
         $todayApprovedBookings = $user->bookings()
-            ->whereDate('tanggal_booking', now()->toDateString())
+            ->whereDate('tanggal_booking', $today->toDateString())
             ->where('status', 'approved')
             ->orderBy('jam_mulai', 'asc')
             ->get();
@@ -101,10 +106,13 @@ class HomeController extends Controller
                 'jam_mulai'      => $j->jam_mulai,
                 'jam_selesai'    => $j->jam_selesai,
                 'kegiatan'       => $j->kegiatan,
-                'ruangan'        => $j->ruangan,
+                // kalau di jadwal kamu simpan string ruangan langsung
+                'ruangan'        => $j->ruangan ?? '-',
+                'ruangan_nama'   => $j->ruangan ?? '-',
                 'keterangan'     => $j->keterangan,
                 'nama_mahasiswa' => null,
                 'nim_mahasiswa'  => null,
+                'booking_id'     => null, // jadwal rutin tidak punya booking
             ]);
         }
 
@@ -112,14 +120,19 @@ class HomeController extends Controller
         foreach ($todayApprovedBookings as $b) {
             $todayAllEvents->push([
                 'tipe'           => 'booking',
-                'hari'           => now()->locale('id')->dayName,
+                'hari'           => $hariIni,
                 'jam_mulai'      => $b->jam_mulai,
                 'jam_selesai'    => $b->jam_selesai,
-                'kegiatan'       => 'Konsultasi (Booking)',
-                'ruangan'        => 'Ruang Konsultasi', // default, karena bookings tidak punya kolom ruangan
-                'keterangan'     => $b->keperluan,      // dari kolom 'keperluan'
+                // tampilkan ringkas keperluan
+                'kegiatan'       => 'Konsultasi: ' . \Illuminate\Support\Str::limit($b->keperluan, 40),
+                // ✅ AMBIL DARI KOLOM RUANGAN BOOKING, BUKAN HARDCODE
+                'ruangan'        => $b->ruangan ?? 'Belum ditentukan',
+                'ruangan_nama'   => $b->ruangan ?? 'Belum ditentukan',
+                'keterangan'     => $b->keperluan,
                 'nama_mahasiswa' => $b->nama_mahasiswa,
                 'nim_mahasiswa'  => $b->nim_mahasiswa,
+                // ✅ UNTUK LINK KE DETAIL BOOKING
+                'booking_id'     => $b->id,
             ]);
         }
 

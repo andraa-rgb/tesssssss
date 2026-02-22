@@ -142,9 +142,9 @@
                                     <h3 class="card-title text-xl">{{ $booking->nama_mahasiswa }}</h3>
                                     @php
                                         $statusConfig = match($booking->status) {
-                                            'pending' => ['badge' => 'badge-warning', 'icon' => '⏳', 'text' => 'Menunggu'],
+                                            'pending'  => ['badge' => 'badge-warning', 'icon' => '⏳', 'text' => 'Menunggu'],
                                             'approved' => ['badge' => 'badge-success', 'icon' => '✅', 'text' => 'Disetujui'],
-                                            'rejected' => ['badge' => 'badge-error', 'icon' => '❌', 'text' => 'Ditolak'],
+                                            'rejected' => ['badge' => 'badge-error',   'icon' => '❌', 'text' => 'Ditolak'],
                                         };
                                     @endphp
                                     <div class="badge {{ $statusConfig['badge'] }} badge-lg gap-2 shadow-md">
@@ -278,78 +278,162 @@
                         @endif
                     </div>
 
-                    {{-- Action Buttons --}}
-                    <div class="flex lg:flex-col gap-2 lg:min-w-[140px]">
+                    {{-- ACTION BUTTONS --}}
+                    <div class="flex flex-col gap-2 lg:min-w-[160px] w-full lg:w-auto mt-2 lg:mt-0">
+
+                        {{-- Tombol Lihat Detail: SELALU ADA --}}
+                        <a href="{{ route('booking.show', $booking) }}" 
+                           class="btn btn-outline btn-sm gap-2 shadow-md hover:shadow-lg transition-all group">
+                            <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Lihat Detail
+                        </a>
+
                         @if($booking->status == 'pending')
+                            {{-- HANYA MUNCUL SAAT PENDING --}}
+
                             {{-- Tombol Edit --}}
                             <a href="{{ route('booking.edit', $booking) }}" 
-                               class="btn btn-info btn-outline w-full gap-2 shadow-lg hover:shadow-xl transition-all">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                               class="btn btn-info btn-sm gap-2 shadow-md hover:shadow-lg transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 Edit
                             </a>
 
-                            {{-- Tombol Setujui Langsung --}}
-                            <form method="POST" action="{{ route('booking.approve', $booking) }}">
-                                @csrf
-                                <button type="submit" class="btn btn-success w-full gap-2 shadow-lg hover:shadow-xl transition-all"
-                                        onclick="return confirm('Setujui booking ini tanpa perubahan?')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Setujui
-                                </button>
-                            </form>
+                            {{-- Tombol Setujui - BUKA MODAL --}}
+                            <button type="button"
+                                    class="btn btn-success btn-sm gap-2 shadow-md hover:shadow-lg transition-all"
+                                    onclick="approveModal{{ $booking->id }}.showModal()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 13l4 4L19 7" />
+                                </svg>
+                                Setujui
+                            </button>
+
+                            {{-- Modal Approve --}}
+                            <dialog id="approveModal{{ $booking->id }}" class="modal">
+                                <div class="modal-box max-w-2xl">
+                                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                                        <span class="text-2xl">✅</span>
+                                        Setujui Booking Konsultasi
+                                    </h3>
+
+                                    {{-- Info Mahasiswa --}}
+                                    <div class="bg-base-200 rounded-lg p-4 mb-4">
+                                        <div class="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <span class="text-base-content/60">Nama:</span>
+                                                <span class="font-semibold ml-2">{{ $booking->nama_mahasiswa }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-base-content/60">NIM:</span>
+                                                <span class="font-semibold ml-2">{{ $booking->nim_mahasiswa ?? '-' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-base-content/60">Tanggal:</span>
+                                                <span class="font-semibold ml-2">{{ \Carbon\Carbon::parse($booking->tanggal_booking)->format('d M Y') }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-base-content/60">Waktu:</span>
+                                                <span class="font-semibold ml-2">{{ date('H:i', strtotime($booking->jam_mulai)) }} - {{ date('H:i', strtotime($booking->jam_selesai)) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <form method="POST" action="{{ route('booking.approve', $booking) }}">
+                                        @csrf
+                                        
+                                        {{-- Field Ruangan (WAJIB) --}}
+                                        <div class="form-control w-full mb-4">
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Ruangan <span class="text-error">*</span></span>
+                                            </label>
+                                            <input 
+                                                type="text"
+                                                name="ruangan" 
+                                                class="input input-bordered w-full" 
+                                                placeholder="Contoh: Lab A101, Ruang Dosen 201, Online via Zoom"
+                                                value="{{ $booking->ruangan }}"
+                                                required
+                                                minlength="3">
+                                            <label class="label">
+                                                <span class="label-text-alt text-base-content/60">Wajib diisi - Minimal 3 karakter</span>
+                                            </label>
+                                        </div>
+
+                                        {{-- Field Catatan Dosen (OPSIONAL) --}}
+                                        <div class="form-control w-full">
+                                            <label class="label">
+                                                <span class="label-text font-semibold">Catatan untuk Mahasiswa</span>
+                                                <span class="label-text-alt text-base-content/60">Opsional</span>
+                                            </label>
+                                            <textarea 
+                                                name="catatan_dosen" 
+                                                class="textarea textarea-bordered h-24" 
+                                                placeholder="Tambahkan catatan khusus (misal: materi yang perlu disiapkan, dokumen yang dibawa, dll)">{{ $booking->catatan_dosen }}</textarea>
+                                            <label class="label">
+                                                <span class="label-text-alt text-base-content/60">Catatan ini akan dikirim via email ke mahasiswa</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="modal-action">
+                                            <button type="button" class="btn btn-ghost" onclick="approveModal{{ $booking->id }}.close()">Batal</button>
+                                            <button type="submit" class="btn btn-success gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Setujui Booking
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <form method="dialog" class="modal-backdrop">
+                                    <button>close</button>
+                                </form>
+                            </dialog>
 
                             {{-- Tombol Tolak --}}
-                            <button class="btn btn-error w-full gap-2 shadow-lg hover:shadow-xl transition-all" 
+                            <button type="button"
+                                    class="btn btn-error btn-sm gap-2 shadow-md hover:shadow-lg transition-all"
                                     onclick="rejectModal{{ $booking->id }}.showModal()">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                                 Tolak
                             </button>
 
-                            {{-- Reject Modal --}}
+                            {{-- Modal Reject --}}
                             <dialog id="rejectModal{{ $booking->id }}" class="modal">
-                                <div class="modal-box max-w-md">
-                                    <h3 class="font-bold text-xl mb-2 flex items-center gap-2">
-                                        <span class="text-error text-2xl">⚠️</span>
-                                        Tolak Booking Konsultasi
-                                    </h3>
-                                    <p class="text-sm text-base-content/70 mb-4">
-                                        Booking dari <span class="font-semibold">{{ $booking->nama_mahasiswa }}</span>
-                                    </p>
-                                    
-                                    <form method="POST" action="{{ route('booking.reject', $booking) }}" class="space-y-4">
+                                <div class="modal-box">
+                                    <h3 class="font-bold text-lg mb-4">Tolak Booking Konsultasi</h3>
+                                    <form method="POST" action="{{ route('booking.reject', $booking) }}">
                                         @csrf
-                                        <div class="form-control">
+                                        <div class="form-control w-full">
                                             <label class="label">
                                                 <span class="label-text font-semibold">Alasan Penolakan <span class="text-error">*</span></span>
                                             </label>
-                                            <textarea name="alasan_reject" 
-                                                      class="textarea textarea-bordered h-32" 
-                                                      placeholder="Jelaskan dengan jelas mengapa booking ini ditolak. Informasi ini akan membantu mahasiswa memahami alasan penolakan."
-                                                      required></textarea>
+                                            <textarea 
+                                                name="alasan_reject" 
+                                                class="textarea textarea-bordered h-32" 
+                                                placeholder="Jelaskan alasan penolakan booking ini..."
+                                                required
+                                                minlength="10"></textarea>
                                             <label class="label">
                                                 <span class="label-text-alt text-base-content/60">Minimal 10 karakter</span>
                                             </label>
                                         </div>
-
-                                        <div class="alert alert-warning">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <span class="text-sm">Mahasiswa akan melihat alasan penolakan ini.</span>
-                                        </div>
-
                                         <div class="modal-action">
-                                            <button type="button" class="btn btn-ghost" onclick="rejectModal{{ $booking->id }}.close()">
-                                                Batal
-                                            </button>
+                                            <button type="button" class="btn btn-ghost" onclick="rejectModal{{ $booking->id }}.close()">Batal</button>
                                             <button type="submit" class="btn btn-error gap-2">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                                 Tolak Booking
@@ -361,22 +445,29 @@
                                     <button>close</button>
                                 </form>
                             </dialog>
+
                         @elseif($booking->status == 'approved')
-                            <div class="badge badge-success badge-lg gap-2 p-4">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {{-- SUDAH DISETUJUI: hanya badge status + Lihat Detail --}}
+                            <div class="badge badge-success badge-lg gap-2 p-3 w-full justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Sudah Disetujui
                             </div>
+
                         @elseif($booking->status == 'rejected')
-                            <div class="badge badge-error badge-lg gap-2 p-4">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            {{-- SUDAH DITOLAK: hanya badge status + Lihat Detail --}}
+                            <div class="badge badge-error badge-lg gap-2 p-3 w-full justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 Sudah Ditolak
                             </div>
                         @endif
                     </div>
+
                 </div>
             </div>
         </div>
@@ -445,7 +536,6 @@ function refreshPage() {
         transform: translateY(0);
     }
 }
-
 .animate-fade-in {
     animation: fade-in 0.3s ease-out;
 }

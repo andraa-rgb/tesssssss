@@ -18,7 +18,7 @@ class BookingRejectedMail extends Mailable
 
     public function __construct(Booking $booking)
     {
-        // Eager load relasi user (dosen)
+        // pastikan relasi user (dosen) sudah ter-load
         $this->booking = $booking->load('user');
     }
 
@@ -42,8 +42,9 @@ class BookingRejectedMail extends Mailable
             markdown: 'emails.booking-rejected',
             with: [
                 'booking' => $this->booking,
-                'dosen' => $this->booking->user,
-                'url' => route('dosen.show', $this->booking->user_id),
+                'dosen'   => $this->booking->user,
+                // ✅ route publik yang memang ada di sistem kamu
+                'url'     => route('dosen.show', $this->booking->user_id),
             ],
         );
     }

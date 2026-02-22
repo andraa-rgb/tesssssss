@@ -20,6 +20,25 @@
                 Edit Booking Konsultasi
             </h2>
 
+            {{-- Info singkat tanggal & waktu booking --}}
+            <div class="mb-4 text-sm text-base-content/70">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div>
+                        <span class="font-semibold">Tanggal saat ini:</span>
+                        <span>
+                            {{ \Carbon\Carbon::parse($booking->tanggal_booking)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Waktu:</span>
+                        <span>
+                            {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
+                            {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             {{-- Error Messages --}}
             @if(session('error'))
                 <div class="alert alert-error mb-4 shadow-lg">
@@ -95,7 +114,7 @@
                         <input type="date" 
                                name="tanggal_booking"
                                class="input input-bordered w-full @error('tanggal_booking') input-error @enderror"
-                               value="{{ old('tanggal_booking', $booking->tanggal_booking) }}"
+                               value="{{ old('tanggal_booking', \Carbon\Carbon::parse($booking->tanggal_booking)->format('Y-m-d')) }}"
                                required>
                         @error('tanggal_booking')
                             <label class="label">
@@ -129,7 +148,7 @@
                         <input type="time" 
                                name="jam_mulai"
                                class="input input-bordered w-full @error('jam_mulai') input-error @enderror"
-                               value="{{ old('jam_mulai', substr($booking->jam_mulai, 0, 5)) }}"
+                               value="{{ old('jam_mulai', \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i')) }}"
                                required>
                         @error('jam_mulai')
                             <label class="label">
@@ -145,7 +164,7 @@
                         <input type="time" 
                                name="jam_selesai"
                                class="input input-bordered w-full @error('jam_selesai') input-error @enderror"
-                               value="{{ old('jam_selesai', substr($booking->jam_selesai, 0, 5)) }}"
+                               value="{{ old('jam_selesai', \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i')) }}"
                                required>
                         @error('jam_selesai')
                             <label class="label">
@@ -185,11 +204,14 @@
                         <ul class="text-sm list-disc list-inside mt-1">
                             <li>Sesuaikan jadwal jika diperlukan sebelum approve</li>
                             <li>Tambahkan ruangan dan catatan untuk membantu mahasiswa</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4">
-                    <a href="{{ route('booking.index') }}" class="btn btn-ghost">
+                    <a href="{{ route('booking.index') }}"
+
+                       class="btn btn-ghost">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>

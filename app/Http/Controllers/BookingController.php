@@ -33,6 +33,18 @@ class BookingController extends Controller
     }
 
     /**
+     * Detail booking
+     */
+    public function show(Booking $booking)
+    {
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke booking ini.');
+        }
+
+        return view('dosen.booking.show', compact('booking'));
+    }
+
+    /**
      * Form edit booking oleh dosen
      */
     public function edit(Booking $booking)
@@ -62,9 +74,8 @@ class BookingController extends Controller
             'catatan_dosen'   => 'nullable|string|max:2000',
         ]);
 
-        // Cek bentrok dengan jadwal rutin dosen
-        $tanggal   = Carbon::parse($validated['tanggal_booking']);
-        $hari      = $tanggal->locale('id')->dayName;
+        $tanggal = Carbon::parse($validated['tanggal_booking']);
+        $hari    = $tanggal->locale('id')->dayName;
 
         $conflictJadwal = $booking->user
             ->jadwals()
@@ -79,7 +90,6 @@ class BookingController extends Controller
             })
             ->exists();
 
-        // Cek bentrok dengan booking lain (approved & pending), kecuali booking ini sendiri
         $conflictBooking = Booking::where('id', '!=', $booking->id)
             ->where('user_id', $booking->user_id)
             ->where('tanggal_booking', $validated['tanggal_booking'])
@@ -100,7 +110,6 @@ class BookingController extends Controller
                 ->with('error', 'Jam yang dipilih bentrok dengan jadwal/booking lain. Silakan sesuaikan lagi.');
         }
 
-        // Update hanya field waktu, ruangan, catatan
         $booking->update($validated);
 
         return redirect()
@@ -109,13 +118,19 @@ class BookingController extends Controller
     }
 
     /**
-     * Approve booking langsung
+     * Approve booking (wajib isi ruangan, catatan opsional)
      */
-    public function approve(Booking $booking)
+    public function approve(Request $request, Booking $booking)
     {
         if ($booking->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Validasi input dari modal approve
+        $validated = $request->validate([
+            'ruangan'       => 'required|string|min:3|max:255',
+            'catatan_dosen' => 'nullable|string|max:2000',
+        ]);
 
         $tanggal = Carbon::parse($booking->tanggal_booking);
         $hari    = $tanggal->locale('id')->dayName;
@@ -153,9 +168,12 @@ class BookingController extends Controller
             return back()->with('error', 'Jadwal bentrok! Gunakan tombol Edit untuk mengubah waktu terlebih dahulu.');
         }
 
+        // Update status + ruangan + catatan dosen
         $booking->update([
-            'status'      => 'approved',
-            'approved_at' => now(),
+            'status'        => 'approved',
+            'approved_at'   => now(),
+            'ruangan'       => $validated['ruangan'],
+            'catatan_dosen' => $validated['catatan_dosen'] ?? $booking->catatan_dosen,
         ]);
 
         try {

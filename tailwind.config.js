@@ -9,28 +9,8 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        // Custom Dark Orange Palette
-        'dark': {
-          50: '#2A2A2E',
-          100: '#1F1F23',
-          200: '#18181B',
-          300: '#121214',
-          400: '#0D0D0F',
-          500: '#08080A',
-        },
-        'orange': {
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#F97316', // Primary
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
-        },
+      fontFamily: {
+        sans: ['Inter var', ...defaultTheme.fontFamily.sans],
       },
     },
   },
@@ -38,26 +18,56 @@ export default {
   daisyui: {
     themes: [
       {
-        darkOrange: {
-          "primary": "#F97316",     // Orange-500
+        // Light Theme - Putih dengan blur
+        lightElegant: {
+          "primary": "#8B5CF6",        // Ungu violet
           "primary-content": "#FFFFFF",
-          "secondary": "#FB923C",   // Orange-400
+          
+          "secondary": "#EC4899",      // Pink fuchsia
           "secondary-content": "#FFFFFF",
-          "accent": "#FDBA74",      // Orange-300
-          "accent-content": "#18181B",
-          "neutral": "#1F1F23",     // Dark-100
-          "neutral-content": "#E5E5E5",
-          "base-100": "#18181B",    // Dark-200 (Background utama)
-          "base-200": "#121214",    // Dark-300 (Card/surface)
-          "base-300": "#0D0D0F",    // Dark-400 (Borders)
-          "base-content": "#E5E5E5", // Text color
-          "info": "#3B82F6",
-          "success": "#10B981",
-          "warning": "#F59E0B",
-          "error": "#EF4444",
+          
+          "accent": "#F43F5E",         // Merah rose
+          "accent-content": "#FFFFFF",
+          
+          "neutral": "#1F2937",        // Abu gelap
+          "neutral-content": "#F9FAFB",
+          
+          "base-100": "#FFFFFF",       // Background putih
+          "base-200": "#F9FAFB",       // Surface abu sangat terang
+          "base-300": "#F3F4F6",       // Border abu terang
+          "base-content": "#111827",   // Text hitam
+          
+          "info": "#3B82F6",           // Biru
+          "success": "#10B981",        // Hijau
+          "warning": "#F59E0B",        // Kuning
+          "error": "#EF4444",          // Merah error
+        },
+        
+        // Dark Theme - Hitam dengan blur
+        darkElegant: {
+          "primary": "#A78BFA",        // Ungu lavender terang
+          "primary-content": "#1F2937",
+          
+          "secondary": "#F472B6",      // Pink terang
+          "secondary-content": "#1F2937",
+          
+          "accent": "#FB7185",         // Rose terang
+          "accent-content": "#1F2937",
+          
+          "neutral": "#E5E7EB",        // Abu terang
+          "neutral-content": "#111827",
+          
+          "base-100": "#0F1117",       // Background hitam kebiruan
+          "base-200": "#1A1D29",       // Surface gelap
+          "base-300": "#252A3A",       // Border gelap
+          "base-content": "#F9FAFB",   // Text putih
+          
+          "info": "#60A5FA",           // Biru terang
+          "success": "#34D399",        // Hijau terang
+          "warning": "#FBBF24",        // Kuning terang
+          "error": "#F87171",          // Merah terang
         },
       },
     ],
   },
 }
-

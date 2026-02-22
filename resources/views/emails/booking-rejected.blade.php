@@ -26,7 +26,7 @@ Anda dapat:
 - Booking kembali dengan jadwal yang berbeda
 - Menghubungi dosen untuk koordinasi jadwal alternatif
 
-<x-mail::button :url="route('mahasiswa.dosen.show', $dosen->id)" color="error">
+<x-mail::button :url="$url" color="error">
 Booking Ulang
 </x-mail::button>
 
@@ -36,5 +36,5 @@ Booking Ulang
 
 Terima kasih,<br>
 **{{ config('app.name') }}**<br>
-Lab WICIDA - Universitas Mulawarman
+Lab WICIDA - STMIK Wicida
 </x-mail::message>

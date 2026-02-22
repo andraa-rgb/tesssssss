@@ -115,10 +115,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // JADWAL MANAGEMENT (CRUD)
     Route::resource('jadwal', JadwalController::class)->except(['show']);
 
-    // BOOKING MANAGEMENT (UNTUK DOSEN YANG LOGIN)
+    // ✅ BOOKING MANAGEMENT (UNTUK DOSEN YANG LOGIN)
     // PENTING: Harus di atas route /dosen/{user} supaya tidak ketabrak
-    Route::prefix('dosen/bookings')->name('booking.')->group(function () {
+    Route::prefix('booking')->name('booking.')->group(function () {
         Route::get('/', [BookingController::class, 'index'])->name('index');
+        
+        // ✅ TAMBAHKAN INI - Detail booking (harus sebelum {booking}/edit)
+        Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+        
         Route::get('/{booking}/edit', [BookingController::class, 'edit'])->name('edit');
         Route::put('/{booking}', [BookingController::class, 'update'])->name('update');
         Route::post('/{booking}/approve', [BookingController::class, 'approve'])->name('approve');
